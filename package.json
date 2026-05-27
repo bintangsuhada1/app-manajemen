@@ -1,0 +1,24 @@
+{
+  "name": "pt-jurti-management-suite",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "build": "npm --workspace apps/web run build",
+    "typecheck": "npm --workspace apps/web run typecheck",
+    "lint": "npm run typecheck",
+    "check:api": "npm --workspace apps/api run check",
+    "check": "npm run check:api && npm run typecheck",
+    "db:generate": "npm --workspace apps/api run prisma -- generate",
+    "db:migrate": "npm --workspace apps/api run prisma -- migrate dev",
+    "db:seed": "npm --workspace apps/api run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

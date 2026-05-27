@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  DIREKTUR
+  PROJECT_MANAGER
+  ADMIN
+  KEUANGAN
+  TEKNISI
+  MARKETING
+}
+
+enum ProjectStatus {
+  SURVEY
+  PENAWARAN
+  BERJALAN
+  HOLD
+  SELESAI
+  BATAL
+}
+
+enum CustomerStatus {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum MaterialMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  role Role @default(ADMIN)
+  phone String?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  assignedProjects ProjectMember[]
+  dailyReports DailyReport[] @relation("TechnicianReports")
+  uploadedDocuments Document[]
+}
+
+model Customer {
+  id String @id @default(cuid())
+  name String
+  picName String?
+  phone String?
+  email String?
+  address String? @db.Text
+  segment String?
+  status CustomerStatus @default(PROSPECT)
+  notes String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects Project[]
+  quotes Quote[]
+  invoices Invoice[]
+}
+
+model Project {
+  id String @id @default(cuid())
+  code String? @unique
+  name String
+  location String?
+  description String? @db.Text
+  status ProjectStatus @default(SURVEY)
+  budget Decimal? @db.Decimal(18,2)
+  contractValue Decimal? @db.Decimal(18,2)
+  progress Int @default(0)
+  startDate DateTime?
+  endDate DateTime?
+  customerId String?
+  customer Customer? @relation(fields:[customerId], references:[id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members ProjectMember[]
+  quotes Quote[]
+  invoices Invoice[]
+  dailyReports DailyReport[]
+  documents Document[]
+  transactions Transaction[]
+  materialMovements MaterialMovement[]
+}
+
+model ProjectMember {
+  id String @id @default(cuid())
+  projectId String
+  userId String
+  position String?
+  project Project @relation(fields:[projectId], references:[id])
+  user User @relation(fields:[userId], references:[id])
+  @@unique([projectId,userId])
+}
+
+model Quote {
+  id String @id @default(cuid())
+  number String @unique
+  title String
+  status QuoteStatus @default(DRAFT)
+  subtotal Decimal @default(0) @db.Decimal(18,2)
+  tax Decimal @default(0) @db.Decimal(18,2)
+  discount Decimal @default(0) @db.Decimal(18,2)
+  total Decimal @default(0) @db.Decimal(18,2)
+  validUntil DateTime?
+  notes String? @db.Text
+  customerId String?
+  projectId String?
+  customer Customer? @relation(fields:[customerId], references:[id])
+  project Project? @relation(fields:[projectId], references:[id])
+  items QuoteItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QuoteItem {
+  id String @id @default(cuid())
+  quoteId String
+  description String
+  unit String @default("ls")
+  qty Decimal @default(1) @db.Decimal(18,2)
+  unitPrice Decimal @default(0) @db.Decimal(18,2)
+  total Decimal @default(0) @db.Decimal(18,2)
+  quote Quote @relation(fields:[quoteId], references:[id], onDelete:Cascade)
+}
+
+model Invoice {
+  id String @id @default(cuid())
+  number String @unique
+  title String
+  status InvoiceStatus @default(DRAFT)
+  subtotal Decimal @default(0) @db.Decimal(18,2)
+  tax Decimal @default(0) @db.Decimal(18,2)
+  total Decimal @default(0) @db.Decimal(18,2)
+  paidAmount Decimal @default(0) @db.Decimal(18,2)
+  dueDate DateTime?
+  customerId String?
+  projectId String?
+  customer Customer? @relation(fields:[customerId], references:[id])
+  project Project? @relation(fields:[projectId], references:[id])
+  items InvoiceItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InvoiceItem {
+  id String @id @default(cuid())
+  invoiceId String
+  description String
+  unit String @default("ls")
+  qty Decimal @default(1) @db.Decimal(18,2)
+  unitPrice Decimal @default(0) @db.Decimal(18,2)
+  total Decimal @default(0) @db.Decimal(18,2)
+  invoice Invoice @relation(fields:[invoiceId], references:[id], onDelete:Cascade)
+}
+
+model Transaction {
+  id String @id @default(cuid())
+  type TransactionType
+  date DateTime @default(now())
+  category String
+  description String?
+  amount Decimal @db.Decimal(18,2)
+  projectId String?
+  project Project? @relation(fields:[projectId], references:[id])
+  createdAt DateTime @default(now())
+}
+
+model DailyReport {
+  id String @id @default(cuid())
+  date DateTime @default(now())
+  projectId String
+  technicianId String
+  workDescription String @db.Text
+  obstacle String? @db.Text
+  progressNote String? @db.Text
+  checklistJson Json?
+  status String @default("SUBMITTED")
+  project Project @relation(fields:[projectId], references:[id])
+  technician User @relation("TechnicianReports", fields:[technicianId], references:[id])
+  photos DailyReportPhoto[]
+  createdAt DateTime @default(now())
+}
+
+model DailyReportPhoto {
+  id String @id @default(cuid())
+  dailyReportId String
+  path String
+  caption String?
+  dailyReport DailyReport @relation(fields:[dailyReportId], references:[id], onDelete:Cascade)
+}
+
+model Material {
+  id String @id @default(cuid())
+  sku String? @unique
+  name String
+  category String?
+  unit String @default("pcs")
+  stock Decimal @default(0) @db.Decimal(18,2)
+  minStock Decimal @default(0) @db.Decimal(18,2)
+  averagePrice Decimal @default(0) @db.Decimal(18,2)
+  supplierId String?
+  supplier Supplier? @relation(fields:[supplierId], references:[id])
+  movements MaterialMovement[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MaterialMovement {
+  id String @id @default(cuid())
+  materialId String
+  projectId String?
+  type MaterialMovementType
+  qty Decimal @db.Decimal(18,2)
+  note String?
+  material Material @relation(fields:[materialId], references:[id])
+  project Project? @relation(fields:[projectId], references:[id])
+  createdAt DateTime @default(now())
+}
+
+model Supplier {
+  id String @id @default(cuid())
+  name String
+  phone String?
+  address String? @db.Text
+  notes String? @db.Text
+  materials Material[]
+}
+
+model Document {
+  id String @id @default(cuid())
+  title String
+  category String
+  fileName String
+  path String
+  mimeType String?
+  size Int?
+  projectId String?
+  uploadedById String
+  project Project? @relation(fields:[projectId], references:[id])
+  uploadedBy User @relation(fields:[uploadedById], references:[id])
+  createdAt DateTime @default(now())
+}
+
+model CompanySetting {
+  id String @id @default(cuid())
+  companyName String @default("PT Jurti Agung Mulia")
+  address String? @db.Text
+  phone String?
+  email String?
+  website String?
+  logoPath String?
+  taxNumber String?
+  bankAccount String?
+}

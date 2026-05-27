@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    @apply bg-soft text-slate-800 antialiased;
+  }
+  ::selection {
+    @apply bg-gold/25 text-navy;
+  }
+}
+
+.input { 
+  @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-gold focus:ring-4 focus:ring-orange-100/70; 
+}
+
+.btn-primary { 
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold px-5 py-3 font-bold text-navy shadow-sm shadow-orange-200/70 transition-all duration-200 hover:bg-orange-400 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
+}
+
+.btn-dark { 
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-navy px-5 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-navy2 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
+}
+
+.card { 
+  @apply rounded-lg border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 transition-colors duration-200; 
+}
+
+.glass-card {
+  @apply rounded-lg border border-white/30 bg-white/80 shadow-sm shadow-slate-200/70 backdrop-blur-md transition-colors duration-200;
+}
+
+.dashboard-panel {
+  @apply rounded-lg border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70;
+}
+
+.table-heading {
+  @apply bg-slate-50 text-xs font-bold uppercase text-slate-500;
+}
+
+.icon-button {
+  @apply inline-grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50;
+}
+
+/* Subtle micro-animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
