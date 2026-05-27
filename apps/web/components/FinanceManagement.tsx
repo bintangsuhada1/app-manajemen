@@ -4,7 +4,8 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import NumberInput from '@/components/NumberInput';
+import RupiahInput from '@/components/RupiahInput';
+import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
 
 type ProjectOption = { id: string; name: string };
 type Transaction = {
@@ -37,7 +38,7 @@ const emptyForm: TransactionForm = { type: 'INCOME', date: today, category: '', 
 const emptySummary = { income: 0, expense: 0, balance: 0 };
 
 function formatCurrency(value: string | number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value || 0));
+  return formatRupiahDisplay(value);
 }
 
 function formatDate(value: string) {
@@ -154,7 +155,7 @@ export function FinanceManagement() {
     const payload = {
       ...form,
       description: form.description || null,
-      amount: Number(form.amount),
+      amount: parseRupiah(form.amount),
       projectId: form.projectId || null
     };
     try {
@@ -264,7 +265,7 @@ export function FinanceManagement() {
               </select>
               <input className="input" type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
               <input className="input" required placeholder="Kategori" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
-              <NumberInput className="input" required placeholder="Nominal" value={form.amount} onChange={(val) => setForm({ ...form, amount: val })} allowDecimal />
+              <RupiahInput className="input" required placeholder="Nominal" value={form.amount} onChange={(val) => setForm({ ...form, amount: val })} />
               <select className="input md:col-span-2" value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
                 <option value="">Tanpa proyek</option>
                 {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}

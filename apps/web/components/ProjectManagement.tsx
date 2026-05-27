@@ -5,6 +5,8 @@ import { Archive, CalendarDays, Eye, Pencil, Plus, Trash2, X } from 'lucide-reac
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
 import NumberInput from '@/components/NumberInput';
+import RupiahInput from '@/components/RupiahInput';
+import { parseRupiah } from '@/lib/rupiah';
 
 type UserOption = { id: string; name: string; role: string };
 type CustomerOption = { id: string; name: string };
@@ -227,8 +229,8 @@ export function ProjectManagement() {
       code: form.code || null,
       location: form.location || null,
       description: form.description || null,
-      budget: form.budget ? Number(form.budget) : null,
-      contractValue: form.contractValue ? Number(form.contractValue) : null,
+        budget: form.budget ? parseRupiah(form.budget) : null,
+        contractValue: form.contractValue ? parseRupiah(form.contractValue) : null,
       progress: Number(form.progress || 0),
       startDate: form.startDate || null,
       endDate: form.endDate || null,
@@ -367,8 +369,8 @@ export function ProjectManagement() {
               <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
                 {(options.statuses.length ? options.statuses : ['SURVEY']).map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
               </select>
-              <NumberInput className="input" placeholder="Budget" value={form.budget} onChange={(val) => setForm({ ...form, budget: val })} allowDecimal />
-              <NumberInput className="input" placeholder="Nilai kontrak" value={form.contractValue} onChange={(val) => setForm({ ...form, contractValue: val })} allowDecimal />
+              <RupiahInput className="input" placeholder="Budget" value={form.budget} onChange={(val) => setForm({ ...form, budget: val })} />
+              <RupiahInput className="input" placeholder="Nilai kontrak" value={form.contractValue} onChange={(val) => setForm({ ...form, contractValue: val })} />
               <input className="input" type="number" min="0" max="100" placeholder="Progress (%)" value={form.progress} onChange={(event) => setForm({ ...form, progress: event.target.value })} />
               <select className="input" value={form.customerId} onChange={(event) => setForm({ ...form, customerId: event.target.value })}>
                 <option value="">Pilih pelanggan</option>

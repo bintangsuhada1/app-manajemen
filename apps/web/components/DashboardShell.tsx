@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BarChart3, BriefcaseBusiness, Building2, ClipboardList, FileText, FolderOpen, Home, Menu, Receipt, Wallet, Boxes, LogOut, Users, X } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, Building2, ClipboardList, FileText, FolderOpen, Home, Menu, Receipt, Wallet, Boxes, LogOut, Settings, Users, X } from 'lucide-react';
 import { canAccess, hashModuleMap, ModuleKey } from '@/lib/permissions';
+import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, getActiveCompany, type Company } from '@/lib/companies';
 import clsx from 'clsx';
 
 type SessionUser = {
@@ -32,7 +33,8 @@ const menu: Array<[string, string, typeof Home, ModuleKey]> = [
   ['Material', '/dashboard#material', Boxes, 'materials'],
   ['Dokumen', '/dashboard#dokumen', FolderOpen, 'documents'],
   ['Analitik', '/dashboard#analitik', BarChart3, 'analytics'],
-  ['Manajemen User', '/dashboard#users', Users, 'users']
+  ['Manajemen User', '/dashboard#users', Users, 'users'],
+  ['Pengaturan', '/dashboard/settings', Settings, 'settings']
 ];
 
 function decodeToken(token: string): TokenPayload | null {
@@ -58,6 +60,7 @@ function readSessionUser(tokenPayload: TokenPayload) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [activeCompany, setActiveCompany] = useState<Company>(() => getActiveCompany());
   const [ready, setReady] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -81,9 +84,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    setActiveCompany(getActiveCompany());
     setUser(sessionUser);
     setReady(true);
   }, [router]);
+
+  useEffect(() => {
+    function syncActiveCompany() {
+      setActiveCompany(getActiveCompany());
+    }
+
+    window.addEventListener(ACTIVE_COMPANY_CHANGED_EVENT, syncActiveCompany);
+    window.addEventListener(COMPANIES_CHANGED_EVENT, syncActiveCompany);
+    window.addEventListener('storage', syncActiveCompany);
+    return () => {
+      window.removeEventListener(ACTIVE_COMPANY_CHANGED_EVENT, syncActiveCompany);
+      window.removeEventListener(COMPANIES_CHANGED_EVENT, syncActiveCompany);
+      window.removeEventListener('storage', syncActiveCompany);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -100,6 +119,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   function handleLogout() {
     window.localStorage.removeItem('token');
     window.localStorage.removeItem('user');
+    window.localStorage.removeItem('session');
+    window.sessionStorage.clear();
     router.replace('/login');
   }
 
@@ -119,7 +140,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="flex items-center gap-3 px-1">
         <div className="grid h-11 w-11 place-items-center rounded-lg bg-gold font-black text-navy shadow-sm shadow-gold/30">J</div>
         <div className="min-w-0">
-          <p className="truncate font-extrabold text-white">PT Jurti</p>
+          <p className="truncate font-extrabold text-white">{activeCompany.name}</p>
           <p className="text-xs font-medium text-slate-300">Management Suite</p>
         </div>
       </div>
@@ -179,7 +200,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </button>
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase text-gold">Internal Dashboard</p>
-                <h1 className="truncate text-lg font-black text-navy sm:text-xl">Manajemen Perusahaan Kontraktor</h1>
+                <h1 className="truncate text-lg font-black text-navy sm:text-xl">{activeCompany.name}</h1>
+                <p className="truncate text-xs font-semibold text-slate-500">{activeCompany.type}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -5,6 +5,8 @@ import { ArrowDownToLine, ArrowUpFromLine, Pencil, Plus, Trash2, X } from 'lucid
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
 import NumberInput from '@/components/NumberInput';
+import RupiahInput from '@/components/RupiahInput';
+import { parseRupiah } from '@/lib/rupiah';
 
 type ProjectOption = { id: string; name: string };
 type Movement = {
@@ -162,7 +164,7 @@ export function MaterialManagement() {
       category: materialForm.category || null,
       stock: Number(materialForm.stock || 0),
       minStock: Number(materialForm.minStock || 0),
-      averagePrice: Number(materialForm.averagePrice || 0)
+        averagePrice: parseRupiah(materialForm.averagePrice || 0)
     };
     try {
       await request<Material>(editingMaterial ? `/materials/${editingMaterial.id}` : '/materials', {
@@ -280,7 +282,7 @@ export function MaterialManagement() {
               <input className="input" required placeholder="Satuan" value={materialForm.unit} onChange={(event) => setMaterialForm({ ...materialForm, unit: event.target.value })} />
               <NumberInput className="input" placeholder="Stok awal" value={materialForm.stock} onChange={(val) => setMaterialForm({ ...materialForm, stock: val })} allowDecimal />
               <NumberInput className="input" placeholder="Minimum stok" value={materialForm.minStock} onChange={(val) => setMaterialForm({ ...materialForm, minStock: val })} allowDecimal />
-              <NumberInput className="input md:col-span-2" placeholder="Harga rata-rata" value={materialForm.averagePrice} onChange={(val) => setMaterialForm({ ...materialForm, averagePrice: val })} allowDecimal />
+              <RupiahInput className="input md:col-span-2" placeholder="Harga rata-rata" value={materialForm.averagePrice} onChange={(val) => setMaterialForm({ ...materialForm, averagePrice: val })} />
             </div>
             <div className="mt-5 flex justify-end gap-3">
               <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsMaterialFormOpen(false)}>Batal</button>

@@ -19,16 +19,17 @@ export type ModuleKey =
   | 'materials'
   | 'documents'
   | 'backups'
-  | 'users';
+  | 'users'
+  | 'settings';
 
 const permissions: Record<Role, ModuleKey[]> = {
-  SUPER_ADMIN: ['dashboard', 'analytics', 'projects', 'customers', 'quotes', 'invoices', 'finance', 'reports', 'materials', 'documents', 'backups', 'users'],
-  DIREKTUR: ['dashboard', 'analytics', 'projects', 'customers', 'quotes', 'invoices', 'finance', 'reports', 'materials', 'documents'],
-  PROJECT_MANAGER: ['dashboard', 'projects', 'reports', 'materials'],
-  ADMIN: ['dashboard', 'customers', 'quotes', 'documents'],
-  KEUANGAN: ['dashboard', 'invoices', 'finance'],
-  TEKNISI: ['dashboard', 'reports'],
-  MARKETING: ['dashboard', 'customers', 'quotes']
+  SUPER_ADMIN: ['dashboard', 'analytics', 'projects', 'customers', 'quotes', 'invoices', 'finance', 'reports', 'materials', 'documents', 'backups', 'users', 'settings'],
+  DIREKTUR: ['dashboard', 'analytics', 'projects', 'customers', 'quotes', 'invoices', 'finance', 'reports', 'materials', 'documents', 'settings'],
+  PROJECT_MANAGER: ['dashboard', 'projects', 'reports', 'materials', 'settings'],
+  ADMIN: ['dashboard', 'customers', 'quotes', 'documents', 'settings'],
+  KEUANGAN: ['dashboard', 'invoices', 'finance', 'settings'],
+  TEKNISI: ['dashboard', 'reports', 'settings'],
+  MARKETING: ['dashboard', 'customers', 'quotes', 'settings']
 };
 
 export const hashModuleMap: Record<string, ModuleKey> = {

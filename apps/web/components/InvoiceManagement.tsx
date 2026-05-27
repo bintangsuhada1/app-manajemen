@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { downloadProtectedFile } from '@/lib/download';
 import { apiUrl } from '@/lib/api';
 import NumberInput from '@/components/NumberInput';
+import RupiahInput from '@/components/RupiahInput';
+import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
 
 type NamedOption = { id: string; name: string };
 type InvoiceItem = {
@@ -13,7 +15,7 @@ type InvoiceItem = {
   description: string;
   unit: string;
   qty: number;
-  unitPrice: number;
+  unitPrice: string | number;
   total?: string | number;
 };
 type Invoice = {
@@ -63,7 +65,7 @@ const emptyForm: InvoiceForm = {
 };
 
 function formatCurrency(value: string | number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value || 0));
+  return formatRupiahDisplay(value);
 }
 
 function formatDate(value: string | null) {
@@ -103,8 +105,8 @@ export function InvoiceManagement() {
 
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
   const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}` } : undefined, [token]);
-  const subtotal = form.items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.unitPrice || 0), 0);
-  const total = subtotal + Number(form.tax || 0);
+  const subtotal = form.items.reduce((sum, item) => sum + Number(item.qty || 0) * parseRupiah(item.unitPrice || 0), 0);
+  const total = subtotal + parseRupiah(form.tax || 0);
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const response = await fetch(`${apiUrl}/api${path}`, {
@@ -219,8 +221,8 @@ export function InvoiceManagement() {
     setError('');
     const payload = {
       ...form,
-      tax: Number(form.tax || 0),
-      paidAmount: Number(form.paidAmount || 0),
+      tax: parseRupiah(form.tax || 0),
+      paidAmount: parseRupiah(form.paidAmount || 0),
       dueDate: form.dueDate || null,
       customerId: form.customerId || null,
       projectId: form.projectId || null,
@@ -228,7 +230,7 @@ export function InvoiceManagement() {
         description: item.description,
         unit: item.unit,
         qty: Number(item.qty),
-        unitPrice: Number(item.unitPrice)
+        unitPrice: parseRupiah(item.unitPrice)
       }))
     };
 
@@ -335,8 +337,8 @@ export function InvoiceManagement() {
                     <input className="input" required placeholder="Deskripsi item" value={item.description} onChange={(event) => updateItem(index, { description: event.target.value })} />
                     <input className="input" required placeholder="Satuan" value={item.unit} onChange={(event) => updateItem(index, { unit: event.target.value })} />
                     <NumberInput className="input" required value={item.qty} onChange={(val) => updateItem(index, { qty: Number(val || 0) })} allowDecimal />
-                    <NumberInput className="input" required value={item.unitPrice} onChange={(val) => updateItem(index, { unitPrice: Number(val || 0) })} allowDecimal />
-                    <div className="grid content-center text-sm font-semibold text-navy">{formatCurrency(item.qty * item.unitPrice)}</div>
+                    <RupiahInput className="input" required placeholder="Harga satuan" value={item.unitPrice} onChange={(val) => updateItem(index, { unitPrice: val })} />
+                    <div className="grid content-center text-sm font-semibold text-navy">{formatCurrency(item.qty * parseRupiah(item.unitPrice))}</div>
                     <button type="button" className="rounded-lg border p-2 text-red-600 hover:bg-red-50" onClick={() => removeItem(index)} disabled={form.items.length === 1}><Trash2 size={16} /></button>
                   </div>
                 ))}
@@ -344,8 +346,8 @@ export function InvoiceManagement() {
             </div>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <NumberInput className="input" placeholder="Pajak" value={form.tax} onChange={(val) => setForm({ ...form, tax: val })} allowDecimal />
-              <NumberInput className="input" placeholder="Sudah dibayar" value={form.paidAmount} onChange={(val) => setForm({ ...form, paidAmount: val })} allowDecimal />
+              <RupiahInput className="input" placeholder="Pajak" value={form.tax} onChange={(val) => setForm({ ...form, tax: val })} />
+              <RupiahInput className="input" placeholder="Sudah dibayar" value={form.paidAmount} onChange={(val) => setForm({ ...form, paidAmount: val })} />
             </div>
 
             <div className="mt-5 grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
