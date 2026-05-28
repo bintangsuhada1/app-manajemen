@@ -204,11 +204,11 @@ export function FinanceManagement() {
   }
 
   return (
-    <section id="keuangan" className="card p-5">
+    <section id="keuangan" className="card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-navy">Keuangan</h2>
-          <p className="mt-1 text-sm text-slate-500">Kas masuk, kas keluar, dan saldo.</p>
+          <h2 className="section-title">Keuangan</h2>
+          <p className="section-description">Kas masuk, kas keluar, dan saldo.</p>
         </div>
         <div className="flex gap-2">
           <button className="btn-primary" onClick={() => openCreateForm('INCOME')} disabled={!token}><Plus size={16} className="inline" /> Kas Masuk</button>
@@ -216,7 +216,7 @@ export function FinanceManagement() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm md:grid-cols-3">
+      <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-sm md:grid-cols-3">
         <div><p className="text-slate-500">Pemasukan</p><p className="font-bold text-navy">{formatCurrency(summary.income)}</p></div>
         <div><p className="text-slate-500">Pengeluaran</p><p className="font-bold text-navy">{formatCurrency(summary.expense)}</p></div>
         <div><p className="text-slate-500">Saldo</p><p className="font-bold text-navy">{formatCurrency(summary.balance)}</p></div>
@@ -240,24 +240,24 @@ export function FinanceManagement() {
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data transaksi dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-        <div className="max-h-80 overflow-y-auto">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+        <div>
           <div className="grid gap-0 divide-y divide-slate-200">
             {loading && <div className="p-4 text-sm text-slate-500">Memuat transaksi...</div>}
             {!loading && transactions.length === 0 && <div className="p-4 text-sm text-slate-500">Belum ada transaksi.</div>}
             {transactions.map((transaction) => (
-              <div key={transaction.id} className="p-4 hover:bg-slate-50">
+              <div key={transaction.id} className="p-3.5 hover:bg-slate-50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-navy">{transaction.category}</p>
                     <p className="text-xs text-slate-500">{transaction.type} | {formatDate(transaction.date)}</p>
                     <p className="text-xs text-slate-500">{transaction.project?.name || 'Tanpa proyek'}</p>
                     {transaction.description && <p className="mt-1 text-xs text-slate-600">{transaction.description}</p>}
-                    <p className="mt-1 text-sm font-semibold text-gold">{formatCurrency(transaction.amount)}</p>
+                    <p className={`money-value mt-1 text-sm font-semibold ${transaction.type === 'INCOME' ? 'text-emerald-700' : 'text-rose-700'}`}>{formatCurrency(transaction.amount)}</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-100" title="Edit transaksi" onClick={() => openEditForm(transaction)}><Pencil size={16} /></button>
-                    <button className="rounded-lg border p-2 text-red-600 hover:bg-red-50" title="Hapus transaksi" onClick={() => void deleteTransaction(transaction)}><Trash2 size={16} /></button>
+                    <button className="icon-button" title="Edit transaksi" onClick={() => openEditForm(transaction)}><Pencil size={16} /></button>
+                    <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus transaksi" onClick={() => void deleteTransaction(transaction)}><Trash2 size={16} /></button>
                   </div>
                 </div>
               </div>
@@ -267,16 +267,16 @@ export function FinanceManagement() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card w-full max-w-2xl p-6" onSubmit={submitForm}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-2xl" onSubmit={submitForm}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi'}</h3>
-                <p className="text-sm text-slate-500">Catatan kas tersimpan langsung ke backend.</p>
+                <h3 className="section-title">{editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi'}</h3>
+                <p className="section-description">Catatan kas tersimpan langsung ke backend.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               <select className="input" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as 'INCOME' | 'EXPENSE' })}>
                 <option value="INCOME">INCOME</option>
                 <option value="EXPENSE">EXPENSE</option>
@@ -291,7 +291,7 @@ export function FinanceManagement() {
               <textarea className="input md:col-span-2" rows={3} placeholder="Deskripsi" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Transaksi'}</button>
             </div>
           </form>

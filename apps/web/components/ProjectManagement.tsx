@@ -288,18 +288,18 @@ export function ProjectManagement() {
   }
 
   return (
-    <section id="proyek" className="card mt-6 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
+    <section id="proyek" className="page-section">
+      <div className="section-header">
         <div>
-          <h2 className="text-xl font-black text-navy">Manajemen Proyek</h2>
-          <p className="text-sm text-slate-500">Filter status, progress, nilai kontrak, deadline, dan PIC.</p>
+          <h2 className="section-title">Manajemen Proyek</h2>
+          <p className="section-description">Filter status, progress, nilai kontrak, deadline, dan PIC.</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
           <Plus size={16} /> Proyek Baru
         </button>
       </div>
 
-      <div className="grid gap-3 border-b border-slate-200 p-5 md:grid-cols-[1fr_220px_auto]">
+      <div className="filter-bar md:grid-cols-[1fr_210px_auto]">
         <input
           className="input"
           placeholder="Cari nama, kode, atau lokasi proyek"
@@ -313,14 +313,14 @@ export function ProjectManagement() {
         <button className="btn-dark" onClick={() => void loadProjects(query, statusFilter)} disabled={!token}>Terapkan</button>
       </div>
 
-      {!token && <p className="p-5 text-sm text-orange-700">Login dulu agar data proyek dari backend dapat dimuat.</p>}
-      {error && <p className="border-b border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+      {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar data proyek dari backend dapat dimuat.</p>}
+      {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              <th className="p-4">Proyek</th>
+              <th>Proyek</th>
               <th>Lokasi</th>
               <th>Status</th>
               <th>Progress</th>
@@ -336,24 +336,24 @@ export function ProjectManagement() {
             {projects.map((project) => {
               const pic = getPic(project);
               return (
-                <tr key={project.id} className="border-t border-slate-100 align-top">
-                  <td className="p-4">
+                <tr key={project.id} className="align-top">
+                  <td>
                     <p className="font-bold text-navy">{project.name}</p>
                     <p className="text-xs text-slate-500">{project.code || 'Tanpa kode'}</p>
                   </td>
                   <td>{project.location || '-'}</td>
-                  <td><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-navy">{statusLabel(project.status)}</span></td>
+                  <td><span className="badge border-blue-100 bg-blue-50 text-blue-700">{statusLabel(project.status)}</span></td>
                   <td>{project.progress}%</td>
                   <td>{formatCurrency(project.contractValue)}</td>
                   <td>{formatDate(project.endDate)}</td>
                   <td>{pic?.name || '-'}</td>
                   <td className="pr-4">
                     <div className="flex justify-end gap-2">
-                      <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Lihat detail" onClick={() => void openDetail(project.id)}><Eye size={16} /></button>
-                      <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Edit proyek" onClick={() => openEditForm(project)}><Pencil size={16} /></button>
+                      <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(project.id)}><Eye size={16} /></button>
+                      <button className="icon-button" title="Edit proyek" onClick={() => openEditForm(project)}><Pencil size={16} /></button>
                       {(userRole === 'SUPER_ADMIN' || userRole === 'DIREKTUR') && (
                         <button
-                          className={`rounded-lg border p-2 ${isSafeToDelete(project) ? 'text-red-600 hover:bg-red-50' : 'text-amber-600 hover:bg-amber-50'}`}
+                          className={`icon-button ${isSafeToDelete(project) ? 'text-red-600 hover:bg-red-50' : 'text-amber-600 hover:bg-amber-50'}`}
                           title={isSafeToDelete(project) ? 'Hapus proyek' : 'Batalkan proyek (Arsipkan)'}
                           onClick={() => void deleteProject(project)}
                         >
@@ -370,17 +370,17 @@ export function ProjectManagement() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6" onSubmit={submitForm}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-3xl" onSubmit={submitForm}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{editingProject ? 'Edit Proyek' : 'Tambah Proyek'}</h3>
-                <p className="text-sm text-slate-500">Data tersimpan langsung ke backend proyek.</p>
+                <h3 className="section-title">{editingProject ? 'Edit Proyek' : 'Tambah Proyek'}</h3>
+                <p className="section-description">Data tersimpan langsung ke backend proyek.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               <input className="input" placeholder="Kode proyek" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
               <input className="input" required placeholder="Nama proyek" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
               <input className="input" placeholder="Lokasi" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
@@ -410,7 +410,7 @@ export function ProjectManagement() {
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Proyek'}</button>
             </div>
           </form>
@@ -418,17 +418,17 @@ export function ProjectManagement() {
       )}
 
       {selectedProject && (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/45 p-4">
-          <div className="card w-full max-w-2xl p-6">
+        <div className="modal-backdrop z-40">
+          <div className="modal-card max-w-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-gold">{selectedProject.code || 'Tanpa kode'}</p>
-                <h3 className="text-2xl font-black text-navy">{selectedProject.name}</h3>
+                <h3 className="text-xl font-semibold text-slate-950">{selectedProject.name}</h3>
               </div>
-              <button className="rounded-lg border p-2" onClick={() => setSelectedProject(null)}><X size={16} /></button>
+              <button className="icon-button" onClick={() => setSelectedProject(null)}><X size={16} /></button>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div><p className="text-xs text-slate-500">Status</p><p className="font-semibold text-navy">{statusLabel(selectedProject.status)}</p></div>
               <div><p className="text-xs text-slate-500">Progress</p><p className="font-semibold text-navy">{selectedProject.progress}%</p></div>
               <div><p className="text-xs text-slate-500">Nilai Kontrak</p><p className="font-semibold text-navy">{formatCurrency(selectedProject.contractValue)}</p></div>

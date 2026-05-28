@@ -34,14 +34,14 @@ export default function DashboardPage() {
       {canAccess(role, 'projects') && <ProjectManagement />}
 
       {(canAccess(role, 'customers') || canAccess(role, 'quotes')) && (
-        <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-2">
+        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-2">
           {canAccess(role, 'customers') && <CustomerManagement />}
           {canAccess(role, 'quotes') && <QuoteManagement />}
         </div>
       )}
 
       {(canAccess(role, 'invoices') || canAccess(role, 'finance') || canAccess(role, 'materials')) && (
-        <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-3">
+        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-3">
           {canAccess(role, 'invoices') && <InvoiceManagement />}
           {canAccess(role, 'finance') && <FinanceManagement />}
           {canAccess(role, 'materials') && <MaterialManagement />}

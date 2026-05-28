@@ -68,7 +68,7 @@ const emptyCompanyForm: CompanyForm = {
   notes: ''
 };
 
-const cardSurface = 'rounded-2xl border border-slate-200/70 bg-white/80 shadow-[0_10px_30px_rgba(2,6,23,0.05)] backdrop-blur-sm';
+const cardSurface = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/60 backdrop-blur-sm';
 
 function getCompanyIcon(company: Company) {
   const text = `${company.name} ${company.type}`.toLowerCase();
@@ -141,19 +141,19 @@ function SettingsSection({
 }) {
   return (
     <section className={`${cardSurface} overflow-hidden`}>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/70 bg-gradient-to-r from-white/95 to-[#F4F7FB]/90 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-gradient-to-r from-white/95 to-slate-50 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#06142E] text-[#F5A623] shadow-[0_12px_24px_rgba(6,20,46,0.18)]">
-            <Icon size={21} />
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#071426] text-cyan-200 shadow-sm">
+            <Icon size={18} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-[#06142E]">{title}</h2>
-            <p className="mt-1 text-sm font-medium text-slate-500">{description}</p>
+            <h2 className="text-[16px] font-semibold text-slate-950">{title}</h2>
+            <p className="mt-0.5 text-[13px] font-normal text-slate-500">{description}</p>
           </div>
         </div>
         {action}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4">{children}</div>
     </section>
   );
 }
@@ -373,52 +373,48 @@ export default function DashboardSettingsPage() {
 
   return (
     <DashboardShell>
-      <div className="relative min-h-screen overflow-hidden rounded-2xl bg-[linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] p-0">
-        <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(15,23,42,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.04)_1px,transparent_1px)] [background-size:36px_36px]" />
-        <div className="pointer-events-none absolute -right-24 top-28 h-72 w-72 rounded-full bg-[#F5A623]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -left-24 top-96 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="relative min-h-screen overflow-hidden rounded-2xl bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] p-0">
+        <div className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(14,165,233,.075)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,.06)_1px,transparent_1px)] [background-size:32px_32px]" />
         {toast && (
           <div className="fixed right-4 top-20 z-[60] max-w-sm rounded-2xl border border-emerald-100 bg-white/95 px-4 py-3 text-sm font-bold text-emerald-700 shadow-[0_18px_40px_rgba(2,6,23,0.12)] backdrop-blur-sm">
             {toast}
           </div>
         )}
 
-        <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/40 bg-white/80 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur-sm">
-          <div className="relative overflow-hidden bg-[#06142E] p-6 text-white sm:p-8">
-            <div className="absolute inset-0 animate-pulse-subtle opacity-20 [background-image:linear-gradient(rgba(245,166,35,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(245,166,35,.18)_1px,transparent_1px)] [background-size:28px_28px]" />
-            <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#F5A623]/20 blur-3xl" />
-            <div className="absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="blueprint-panel relative mb-5 shadow-premium">
+          <div className="relative overflow-hidden bg-[#071426] p-5 text-white">
+            <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(14,165,233,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,.18)_1px,transparent_1px)] [background-size:28px_28px]" />
             <div className="absolute inset-x-0 bottom-0 h-1 bg-[#F5A623]" />
-            <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold uppercase text-[#F5A623]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-cyan-200">
                   <Settings size={14} />
                   Active Company
                 </div>
-                <h1 className="mt-5 text-4xl font-black leading-tight text-white">Pengaturan Perusahaan</h1>
-                <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-200">
+                <h1 className="mt-3 text-[24px] font-semibold leading-tight text-[#F8FAFC] sm:text-[28px]">Pengaturan Perusahaan</h1>
+                <p className="mt-2 max-w-2xl text-[13px] font-normal leading-5 text-[rgba(226,232,240,0.88)]">
                   Kelola perusahaan aktif, profil pengguna, dan akses sistem.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-3 text-xs font-bold">
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-slate-100">
+                <div className="mt-4 flex flex-wrap gap-2.5 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100">
                     <Clock3 size={14} />
                     {currentTime || 'Memuat waktu...'}
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-xl border border-[#F5A623]/30 bg-[#F5A623]/15 px-3 py-2 text-[#F5A623]">
+                  <span className="inline-flex items-center gap-2 rounded-xl border border-[#F5A623]/30 bg-[#F5A623]/15 px-3 py-1.5 text-[#F5A623]">
                     <CheckCircle2 size={14} />
                     Active Company
                   </span>
-                  <span className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-slate-100">
+                  <span className="rounded-xl border border-white/15 bg-white/10 px-3 py-1.5 text-slate-100">
                     {activeCompany.type}
                   </span>
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/20 bg-white/15 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-md">
-                <p className="text-xs font-bold uppercase text-[#F5A623]">Perusahaan Aktif</p>
-                <p className="mt-2 truncate text-xl font-black text-white">{activeCompany.name}</p>
+              <div className="rounded-2xl border border-white/20 bg-white/12 p-4 shadow-sm backdrop-blur-md">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#F5A623]">Perusahaan Aktif</p>
+                <p className="mt-2 truncate text-lg font-semibold text-white">{activeCompany.name}</p>
                 <p className="mt-1 text-sm font-medium text-slate-200">{activeCompany.type}</p>
-                <div className="mt-4 rounded-xl border border-white/15 bg-white/10 p-3 text-xs font-semibold text-slate-200">
-                  Kode perusahaan: <span className="font-black text-white">{activeCompany.id}</span>
+                <div className="mt-3 rounded-xl border border-white/15 bg-white/10 p-3 text-xs font-medium text-slate-200">
+                  Kode perusahaan: <span className="font-semibold text-white">{activeCompany.id}</span>
                 </div>
               </div>
             </div>

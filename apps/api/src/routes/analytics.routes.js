@@ -1,13 +1,14 @@
-import { Router } from 'express';
+import express from 'express';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
-import { getCompanyWhere } from '../utils/company.js';
 
-const router = Router();
+const router = express.Router();
 const analyticsRoles = ['SUPER_ADMIN', 'DIREKTUR'];
 
 router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (req, res) => {
-  const companyWhere = getCompanyWhere(req);
+  const { companyId } = req.query;
+  const companyWhere = companyId ? { companyId } : {};
+
   const now = new Date();
   const deadlineLimit = new Date(now);
   deadlineLimit.setDate(deadlineLimit.getDate() + 14);
@@ -53,10 +54,13 @@ router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (req,
   const income = transactions
     .filter((row) => row.type === 'INCOME')
     .reduce((sum, row) => sum + Number(row.amount), 0);
+
   const expense = transactions
     .filter((row) => row.type === 'EXPENSE')
     .reduce((sum, row) => sum + Number(row.amount), 0);
+
   const invoiceTotal = invoices.reduce((sum, invoice) => sum + Number(invoice.total), 0);
+
   const invoiceOverdue = invoices.filter((invoice) => (
     invoice.status === 'OVERDUE'
     || (
@@ -69,6 +73,7 @@ router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (req,
   const chart = chartTransactions.length
     ? Array.from({ length: 12 }, (_, month) => ({ month: month + 1, income: 0, expense: 0 }))
     : [];
+
   chartTransactions.forEach((row) => {
     const bucket = chart[new Date(row.date).getMonth()];
     if (!bucket) return;

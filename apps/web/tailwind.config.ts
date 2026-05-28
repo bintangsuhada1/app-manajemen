@@ -4,12 +4,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: '#081A33',
-        navy2: '#0E2A4D',
-        gold: '#F5A524',
-        soft: '#F5F7FA'
+        navy: '#071426',
+        navy2: '#0B1730',
+        gold: '#F59E0B',
+        soft: '#F8FAFC'
       },
-      boxShadow: { premium: '0 22px 70px rgba(8, 26, 51, .16)' }
+      boxShadow: { premium: '0 18px 44px rgba(15, 23, 42, .10)' }
     }
   },
   plugins: []

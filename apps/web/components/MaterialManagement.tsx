@@ -233,11 +233,11 @@ export function MaterialManagement() {
   }
 
   return (
-    <section id="material" className="card p-5">
+    <section id="material" className="card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-navy">Material</h2>
-          <p className="mt-1 text-sm text-slate-500">Stok dan mutasi inventaris.</p>
+          <h2 className="section-title">Material</h2>
+          <p className="section-description">Stok dan mutasi inventaris.</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateMaterial} disabled={!token}>
           <Plus size={16} /> Material Baru
@@ -257,24 +257,29 @@ export function MaterialManagement() {
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 grid gap-3">
-        {loading && <div className="rounded-xl border p-4 text-sm text-slate-500">Memuat material...</div>}
-        {!loading && materials.length === 0 && <div className="rounded-xl border p-4 text-sm text-slate-500">Belum ada material.</div>}
+        {loading && <div className="empty-state">Memuat material...</div>}
+        {!loading && materials.length === 0 && <div className="empty-state">Belum ada material.</div>}
         {materials.map((material) => {
           const lowStock = Number(material.stock) <= Number(material.minStock);
           return (
-            <div key={material.id} className="rounded-xl border p-4">
+            <div key={material.id} className="data-card">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-bold text-navy">{material.name}</p>
-                  <p className="text-sm text-slate-500">{material.sku || 'Tanpa SKU'}{material.category ? ` | ${material.category}` : ''}</p>
-                  <p className="mt-1 text-sm font-semibold text-gold">Stok {formatNumber(material.stock)} {material.unit}</p>
-                  {lowStock && <p className="mt-1 text-xs font-semibold text-red-600">Low stock | minimum {formatNumber(material.minStock)}</p>}
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-950">{material.name}</p>
+                  <p className="text-[13px] text-slate-500">{material.sku || 'Tanpa SKU'}{material.category ? ` | ${material.category}` : ''}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`badge ${lowStock ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                      <span className={`status-dot mr-1.5 ${lowStock ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                      Stok {formatNumber(material.stock)} {material.unit}
+                    </span>
+                    {lowStock && <span className="text-xs font-semibold text-red-600">Minimum {formatNumber(material.minStock)}</span>}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="rounded-lg border p-2 text-emerald-700 hover:bg-emerald-50" title="Barang masuk" onClick={() => openMovement(material, 'IN')}><ArrowDownToLine size={16} /></button>
-                  <button className="rounded-lg border p-2 text-orange-700 hover:bg-orange-50" title="Barang keluar" onClick={() => openMovement(material, 'OUT')}><ArrowUpFromLine size={16} /></button>
-                  <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Edit material" onClick={() => openEditMaterial(material)}><Pencil size={16} /></button>
-                  <button className="rounded-lg border p-2 text-red-600 hover:bg-red-50" title="Hapus material" onClick={() => void deleteMaterial(material)}><Trash2 size={16} /></button>
+                  <button className="icon-button text-emerald-700 hover:bg-emerald-50" title="Barang masuk" onClick={() => openMovement(material, 'IN')}><ArrowDownToLine size={16} /></button>
+                  <button className="icon-button text-orange-700 hover:bg-orange-50" title="Barang keluar" onClick={() => openMovement(material, 'OUT')}><ArrowUpFromLine size={16} /></button>
+                  <button className="icon-button" title="Edit material" onClick={() => openEditMaterial(material)}><Pencil size={16} /></button>
+                  <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus material" onClick={() => void deleteMaterial(material)}><Trash2 size={16} /></button>
                 </div>
               </div>
               {material.movements[0] && <p className="mt-3 text-xs text-slate-500">Mutasi terakhir: {material.movements[0].type} {formatNumber(material.movements[0].qty)}{material.movements[0].project ? ` | ${material.movements[0].project.name}` : ''}</p>}
@@ -284,16 +289,16 @@ export function MaterialManagement() {
       </div>
 
       {isMaterialFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card w-full max-w-2xl p-6" onSubmit={submitMaterial}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-2xl" onSubmit={submitMaterial}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{editingMaterial ? 'Edit Material' : 'Tambah Material'}</h3>
-                <p className="text-sm text-slate-500">Stok awal diisi saat material dibuat.</p>
+                <h3 className="section-title">{editingMaterial ? 'Edit Material' : 'Tambah Material'}</h3>
+                <p className="section-description">Stok awal diisi saat material dibuat.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsMaterialFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsMaterialFormOpen(false)}><X size={16} /></button>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               <input className="input" placeholder="SKU" value={materialForm.sku} onChange={(event) => setMaterialForm({ ...materialForm, sku: event.target.value })} />
               <input className="input" required placeholder="Nama material" value={materialForm.name} onChange={(event) => setMaterialForm({ ...materialForm, name: event.target.value })} />
               <input className="input" placeholder="Kategori" value={materialForm.category} onChange={(event) => setMaterialForm({ ...materialForm, category: event.target.value })} />
@@ -303,7 +308,7 @@ export function MaterialManagement() {
               <RupiahInput className="input md:col-span-2" placeholder="Harga rata-rata" value={materialForm.averagePrice} onChange={(val) => setMaterialForm({ ...materialForm, averagePrice: val })} />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsMaterialFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsMaterialFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Material'}</button>
             </div>
           </form>
@@ -311,16 +316,16 @@ export function MaterialManagement() {
       )}
 
       {isMovementFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card w-full max-w-xl p-6" onSubmit={submitMovement}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-xl" onSubmit={submitMovement}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{movementForm.type === 'IN' ? 'Barang Masuk' : 'Barang Keluar'}</h3>
-                <p className="text-sm text-slate-500">Mutasi otomatis memperbarui stok.</p>
+                <h3 className="section-title">{movementForm.type === 'IN' ? 'Barang Masuk' : 'Barang Keluar'}</h3>
+                <p className="section-description">Mutasi otomatis memperbarui stok.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsMovementFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsMovementFormOpen(false)}><X size={16} /></button>
             </div>
-            <div className="mt-5 grid gap-4">
+            <div className="mt-4 grid gap-3">
               <select className="input" value={movementForm.projectId} onChange={(event) => setMovementForm({ ...movementForm, projectId: event.target.value })}>
                 <option value="">Tanpa proyek</option>
                 {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -329,7 +334,7 @@ export function MaterialManagement() {
               <textarea className="input" rows={3} placeholder="Catatan" value={movementForm.note} onChange={(event) => setMovementForm({ ...movementForm, note: event.target.value })} />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsMovementFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsMovementFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Mutasi'}</button>
             </div>
           </form>

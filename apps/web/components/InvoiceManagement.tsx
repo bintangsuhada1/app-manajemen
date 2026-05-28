@@ -279,11 +279,11 @@ export function InvoiceManagement() {
   }
 
   return (
-    <section id="invoice" className="card p-5">
+    <section id="invoice" className="card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-navy">Invoice</h2>
-          <p className="mt-1 text-sm text-slate-500">Due date, status, dan pembayaran.</p>
+          <h2 className="section-title">Invoice</h2>
+          <p className="section-description">Due date, status, dan pembayaran.</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
           <Plus size={16} /> Invoice Baru
@@ -294,22 +294,22 @@ export function InvoiceManagement() {
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 grid gap-3">
-        {loading && <div className="rounded-xl border p-4 text-sm text-slate-500">Memuat invoice...</div>}
-        {!loading && invoices.length === 0 && <div className="rounded-xl border p-4 text-sm text-slate-500">Belum ada invoice.</div>}
+        {loading && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Memuat invoice...</div>}
+        {!loading && invoices.length === 0 && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Belum ada invoice.</div>}
         {invoices.map((invoice) => (
-          <div key={invoice.id} className="rounded-xl border p-4">
+          <div key={invoice.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-bold text-navy">{invoice.number} - {invoice.title}</p>
-                <p className="text-sm text-slate-500">{invoice.customer?.name || '-'}{invoice.project ? ` | ${invoice.project.name}` : ''}</p>
-                <p className="mt-1 text-xs font-semibold text-gold">{statusLabel(invoice.status)} | {paymentStatus(invoice)} | {formatCurrency(invoice.total)}</p>
+                <p className="text-[13px] text-slate-500">{invoice.customer?.name || '-'}{invoice.project ? ` | ${invoice.project.name}` : ''}</p>
+                <p className="mt-1 text-xs font-semibold text-cyan-700">{statusLabel(invoice.status)} | {paymentStatus(invoice)} | {formatCurrency(invoice.total)}</p>
                 <p className="mt-1 text-xs text-slate-500">Jatuh tempo: {formatDate(invoice.dueDate)}</p>
               </div>
               <div className="flex gap-2">
-                <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Lihat detail" onClick={() => void openDetail(invoice.id)}><Eye size={16} /></button>
-                <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Download PDF" onClick={() => void downloadProtectedFile(withActiveCompanyId(`/invoices/${invoice.id}/pdf`, activeCompanyId), `invoice-${invoice.number}.pdf`, token, () => { window.localStorage.removeItem('token'); window.localStorage.removeItem('user'); router.replace('/login'); }, () => router.replace('/forbidden'))}><Download size={16} /></button>
-                <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Edit invoice" onClick={() => openEditForm(invoice)}><Pencil size={16} /></button>
-                <button className="rounded-lg border p-2 text-red-600 hover:bg-red-50" title="Hapus invoice" onClick={() => void deleteInvoice(invoice)}><Trash2 size={16} /></button>
+                <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(invoice.id)}><Eye size={16} /></button>
+                <button className="icon-button" title="Download PDF" onClick={() => void downloadProtectedFile(withActiveCompanyId(`/invoices/${invoice.id}/pdf`, activeCompanyId), `invoice-${invoice.number}.pdf`, token, () => { window.localStorage.removeItem('token'); window.localStorage.removeItem('user'); router.replace('/login'); }, () => router.replace('/forbidden'))}><Download size={16} /></button>
+                <button className="icon-button" title="Edit invoice" onClick={() => openEditForm(invoice)}><Pencil size={16} /></button>
+                <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus invoice" onClick={() => void deleteInvoice(invoice)}><Trash2 size={16} /></button>
               </div>
             </div>
           </div>
@@ -317,17 +317,17 @@ export function InvoiceManagement() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card max-h-[90vh] w-full max-w-4xl overflow-y-auto p-6" onSubmit={submitForm}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-4xl" onSubmit={submitForm}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{editingInvoice ? 'Edit Invoice' : 'Tambah Invoice'}</h3>
-                <p className="text-sm text-slate-500">Pembayaran ditampilkan dari total dan nilai yang sudah dibayar.</p>
+                <h3 className="section-title">{editingInvoice ? 'Edit Invoice' : 'Tambah Invoice'}</h3>
+                <p className="section-description">Pembayaran ditampilkan dari total dan nilai yang sudah dibayar.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               <input className="input" required placeholder="Nomor invoice" value={form.number} onChange={(event) => setForm({ ...form, number: event.target.value })} />
               <input className="input" required placeholder="Judul invoice" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
@@ -347,7 +347,7 @@ export function InvoiceManagement() {
             <div className="mt-5">
               <div className="flex items-center justify-between">
                 <p className="font-bold text-navy">Item Invoice</p>
-                <button type="button" className="rounded-xl border px-4 py-2 text-sm font-semibold text-navy" onClick={addItem}>+ Item</button>
+                <button type="button" className="btn-secondary" onClick={addItem}>+ Item</button>
               </div>
               <div className="mt-3 grid gap-3">
                 {form.items.map((item, index) => (
@@ -357,7 +357,7 @@ export function InvoiceManagement() {
                     <NumberInput className="input" required value={item.qty} onChange={(val) => updateItem(index, { qty: Number(val || 0) })} allowDecimal />
                     <RupiahInput className="input" required placeholder="Harga satuan" value={item.unitPrice} onChange={(val) => updateItem(index, { unitPrice: val })} />
                     <div className="grid content-center text-sm font-semibold text-navy">{formatCurrency(item.qty * parseRupiah(item.unitPrice))}</div>
-                    <button type="button" className="rounded-lg border p-2 text-red-600 hover:bg-red-50" onClick={() => removeItem(index)} disabled={form.items.length === 1}><Trash2 size={16} /></button>
+                    <button type="button" className="icon-button text-red-600 hover:bg-red-50" onClick={() => removeItem(index)} disabled={form.items.length === 1}><Trash2 size={16} /></button>
                   </div>
                 ))}
               </div>
@@ -375,7 +375,7 @@ export function InvoiceManagement() {
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Invoice'}</button>
             </div>
           </form>
@@ -383,14 +383,14 @@ export function InvoiceManagement() {
       )}
 
       {selectedInvoice && (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/45 p-4">
-          <div className="card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6">
+        <div className="modal-backdrop z-40">
+          <div className="modal-card max-w-3xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-gold">{selectedInvoice.number}</p>
-                <h3 className="text-2xl font-black text-navy">{selectedInvoice.title}</h3>
+                <h3 className="text-xl font-semibold text-slate-950">{selectedInvoice.title}</h3>
               </div>
-              <button className="rounded-lg border p-2" onClick={() => setSelectedInvoice(null)}><X size={16} /></button>
+              <button className="icon-button" onClick={() => setSelectedInvoice(null)}><X size={16} /></button>
             </div>
             <div className="mt-5 grid gap-3 text-sm">
               <p><span className="text-slate-500">Pelanggan:</span> {selectedInvoice.customer?.name || '-'}</p>

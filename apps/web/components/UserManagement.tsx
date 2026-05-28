@@ -48,6 +48,29 @@ function roleLabel(role: string) {
   return role.replaceAll('_', ' ');
 }
 
+const fieldLabels: Record<string, string> = {
+  name: 'Nama Lengkap',
+  email: 'Alamat Email',
+  role: 'Role Internal',
+  phone: 'Nomor WhatsApp',
+  isActive: 'Status Akun',
+  password: 'Kata Sandi Awal'
+};
+
+function formatApiError(payload: any) {
+  const fieldErrors = payload?.errors?.fieldErrors;
+  if (fieldErrors && typeof fieldErrors === 'object') {
+    const messages = Object.entries(fieldErrors)
+      .flatMap(([field, errors]) => {
+        if (!Array.isArray(errors)) return [];
+        return errors.map((message) => `${fieldLabels[field] || field}: ${message}`);
+      })
+      .filter(Boolean);
+    if (messages.length) return messages.join(' ');
+  }
+  return payload?.message || 'Permintaan gagal diproses';
+}
+
 export function UserManagement() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -82,7 +105,7 @@ export function UserManagement() {
       }
       if (response.status === 403) router.replace('/forbidden');
       const payload = await response.json().catch(() => null);
-      throw new Error(payload?.message || 'Permintaan gagal diproses');
+      throw new Error(formatApiError(payload));
     }
     return response.json();
   }
@@ -140,12 +163,12 @@ export function UserManagement() {
     setSuccess('');
 
     const payload = {
-      name: form.name,
-      email: form.email,
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
       role: form.role,
-      phone: form.phone || null,
+      phone: form.phone.trim() || null,
       isActive: form.isActive,
-      ...(editingUser ? {} : { password: form.password })
+      ...(editingUser ? {} : { password: form.password?.trim() || '' })
     };
 
     try {
@@ -198,25 +221,25 @@ export function UserManagement() {
   }
 
   return (
-    <section id="users" className="card mt-6 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
+    <section id="users" className="page-section">
+      <div className="section-header">
         <div>
-          <h2 className="text-xl font-black text-navy">Manajemen Akun Pengguna</h2>
-          <p className="text-sm text-slate-500">Kelola kredensial, peran/role internal perusahaan, dan hak akses aplikasi.</p>
+          <h2 className="section-title">Manajemen Akun Pengguna</h2>
+          <p className="section-description">Kelola kredensial, role internal perusahaan, dan hak akses aplikasi.</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
           <Plus size={16} /> User Baru
         </button>
       </div>
 
-      {error && <p className="border-b border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
-      {success && <p className="border-b border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700">{success}</p>}
+      {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
+      {success && <p className="border-b border-emerald-100 bg-emerald-50 p-3.5 text-sm text-emerald-700">{success}</p>}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="enterprise-table">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
-              <th className="p-4">Nama Lengkap</th>
+              <th>Nama Lengkap</th>
               <th>Alamat Email</th>
               <th>Role Internal</th>
               <th>No. WhatsApp</th>
@@ -228,37 +251,37 @@ export function UserManagement() {
             {loading && <tr><td className="p-4 text-slate-500" colSpan={6}>Memuat daftar user...</td></tr>}
             {!loading && users.length === 0 && <tr><td className="p-4 text-slate-500" colSpan={6}>Belum ada user terdaftar.</td></tr>}
             {!loading && users.map((u) => (
-              <tr key={u.id} className="border-t border-slate-100 align-middle">
-                <td className="p-4 font-bold text-navy">{u.name}</td>
+              <tr key={u.id} className="align-middle">
+                <td className="font-semibold text-slate-950">{u.name}</td>
                 <td>{u.email}</td>
                 <td>
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-navy">
+                  <span className="badge border-blue-100 bg-blue-50 text-blue-700">
                     {roleLabel(u.role)}
                   </span>
                 </td>
                 <td>{u.phone || '-'}</td>
                 <td>
                   {u.isActive ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                      <Check size={14} className="text-emerald-500" /> Aktif
+                    <span className="badge border-emerald-200 bg-emerald-50 text-emerald-700">
+                      <Check size={13} className="mr-1 text-emerald-500" /> Aktif
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-700">
-                      <XCircle size={14} className="text-rose-500" /> Nonaktif
+                    <span className="badge border-rose-200 bg-rose-50 text-rose-700">
+                      <XCircle size={13} className="mr-1 text-rose-500" /> Nonaktif
                     </span>
                   )}
                 </td>
                 <td className="pr-4">
                   <div className="flex justify-end gap-2">
                     <button 
-                      className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" 
+                      className="icon-button" 
                       title="Reset password" 
                       onClick={() => openPasswordForm(u)}
                     >
                       <Key size={16} />
                     </button>
                     <button 
-                      className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" 
+                      className="icon-button" 
                       title="Edit data user" 
                       onClick={() => openEditForm(u)}
                     >
@@ -273,18 +296,18 @@ export function UserManagement() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card max-h-[90vh] w-full max-w-xl overflow-y-auto p-6" onSubmit={submitForm}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-xl" onSubmit={submitForm}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">{editingUser ? 'Edit Detail User' : 'Tambah User Baru'}</h3>
-                <p className="text-sm text-slate-500">Isi data akun internal perusahaan dengan benar.</p>
+                <h3 className="section-title">{editingUser ? 'Edit Detail User' : 'Tambah User Baru'}</h3>
+                <p className="section-description">Isi data akun internal perusahaan dengan benar.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
             </div>
 
-            <div className="mt-5 grid gap-4">
-              <label className="block text-sm font-semibold text-slate-700">
+            <div className="mt-4 grid gap-3">
+              <label className="block text-[13px] font-medium text-slate-700">
                 Nama Lengkap
                 <input 
                   className="input mt-1" 
@@ -295,7 +318,7 @@ export function UserManagement() {
                 />
               </label>
 
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-[13px] font-medium text-slate-700">
                 Alamat Email
                 <input 
                   className="input mt-1" 
@@ -308,7 +331,7 @@ export function UserManagement() {
               </label>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-[13px] font-medium text-slate-700">
                   Peran (Role)
                   <select 
                     className="input mt-1" 
@@ -319,7 +342,7 @@ export function UserManagement() {
                   </select>
                 </label>
 
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-[13px] font-medium text-slate-700">
                   Nomor WhatsApp
                   <input 
                     className="input mt-1" 
@@ -331,7 +354,7 @@ export function UserManagement() {
               </div>
 
               {!editingUser && (
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-[13px] font-medium text-slate-700">
                   Kata Sandi Awal
                   <input 
                     className="input mt-1" 
@@ -358,7 +381,7 @@ export function UserManagement() {
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan User'}</button>
             </div>
           </form>
@@ -366,14 +389,14 @@ export function UserManagement() {
       )}
 
       {isPasswordOpen && editingUser && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card w-full max-w-md p-6" onSubmit={submitPasswordReset}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-md" onSubmit={submitPasswordReset}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">Reset Password User</h3>
-                <p className="text-sm text-slate-500">Ubah password untuk user: <span className="font-bold text-navy">{editingUser.name}</span></p>
+                <h3 className="section-title">Reset Password User</h3>
+                <p className="section-description">Ubah password untuk user: <span className="font-semibold text-navy">{editingUser.name}</span></p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsPasswordOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsPasswordOpen(false)}><X size={16} /></button>
             </div>
 
             <div className="mt-5">
@@ -391,7 +414,7 @@ export function UserManagement() {
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsPasswordOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsPasswordOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Mereset...' : 'Reset Password'}</button>
             </div>
           </form>

@@ -181,18 +181,18 @@ export function DocumentManagement() {
   }
 
   return (
-    <section id="dokumen" className="card mt-6 overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
+    <section id="dokumen" className="page-section">
+      <div className="section-header">
         <div>
-          <h2 className="text-xl font-black text-navy">Dokumen & Dokumentasi Proyek</h2>
-          <p className="text-sm text-slate-500">Dokumen perusahaan, dokumen proyek, dan foto proyek.</p>
+          <h2 className="section-title">Dokumen & Dokumentasi Proyek</h2>
+          <p className="section-description">Dokumen perusahaan, dokumen proyek, dan foto proyek.</p>
         </div>
         <button className="btn-primary inline-flex items-center gap-2" onClick={() => setIsFormOpen(true)} disabled={!token}>
           <Plus size={16} /> Upload Dokumen
         </button>
       </div>
 
-      <div className="grid gap-3 border-b border-slate-200 p-5 md:grid-cols-3">
+      <div className="filter-bar md:grid-cols-3">
         <select className="input" value={filters.projectId} onChange={(event) => setFilters({ ...filters, projectId: event.target.value })}>
           <option value="">Semua proyek</option>
           {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -208,20 +208,20 @@ export function DocumentManagement() {
         <button className="btn-dark md:col-span-3" onClick={() => void loadDocuments()} disabled={!token}>Terapkan Filter</button>
       </div>
 
-      {!token && <p className="p-5 text-sm text-orange-700">Login dulu agar dokumen dapat dimuat.</p>}
-      {error && <p className="border-b border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+      {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar dokumen dapat dimuat.</p>}
+      {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left">
           <thead className="bg-slate-50 text-slate-500">
-            <tr><th className="p-4">Dokumen</th><th>Kategori</th><th>Proyek</th><th>Tipe</th><th>Ukuran</th><th>Upload</th><th className="pr-4 text-right">Aksi</th></tr>
+            <tr><th>Dokumen</th><th>Kategori</th><th>Proyek</th><th>Tipe</th><th>Ukuran</th><th>Upload</th><th className="pr-4 text-right">Aksi</th></tr>
           </thead>
           <tbody>
             {loading && <tr><td className="p-4 text-slate-500" colSpan={7}>Memuat dokumen...</td></tr>}
             {!loading && documents.length === 0 && <tr><td className="p-4 text-slate-500" colSpan={7}>Belum ada dokumen.</td></tr>}
             {documents.map((document) => (
-              <tr key={document.id} className="border-t border-slate-100">
-                <td className="p-4"><p className="font-bold text-navy">{document.title}</p><p className="text-xs text-slate-500">{document.fileName}</p></td>
+              <tr key={document.id}>
+                <td><p className="font-bold text-navy">{document.title}</p><p className="text-xs text-slate-500">{document.fileName}</p></td>
                 <td>{document.category}</td>
                 <td>{document.project?.name || 'Perusahaan'}</td>
                 <td>{document.mimeType || '-'}</td>
@@ -229,9 +229,9 @@ export function DocumentManagement() {
                 <td>{formatDate(document.createdAt)}</td>
                 <td className="pr-4">
                   <div className="flex justify-end gap-2">
-                    <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Detail" onClick={() => void openDetail(document.id)}><Eye size={16} /></button>
-                    <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Preview / download" onClick={() => void openFile(document)}><Download size={16} /></button>
-                    <button className="rounded-lg border p-2 text-red-600 hover:bg-red-50" title="Hapus dokumen" onClick={() => void deleteDocument(document)}><Trash2 size={16} /></button>
+                    <button className="icon-button" title="Detail" onClick={() => void openDetail(document.id)}><Eye size={16} /></button>
+                    <button className="icon-button" title="Preview / download" onClick={() => void openFile(document)}><Download size={16} /></button>
+                    <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus dokumen" onClick={() => void deleteDocument(document)}><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
@@ -241,16 +241,16 @@ export function DocumentManagement() {
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4">
-          <form className="card w-full max-w-2xl p-6" onSubmit={submitUpload}>
+        <div className="modal-backdrop">
+          <form className="modal-card max-w-2xl" onSubmit={submitUpload}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-navy">Upload Dokumen</h3>
-                <p className="text-sm text-slate-500">Gunakan kategori `PHOTO` untuk foto dokumentasi proyek.</p>
+                <h3 className="section-title">Upload Dokumen</h3>
+                <p className="section-description">Gunakan kategori `PHOTO` untuk foto dokumentasi proyek.</p>
               </div>
-              <button type="button" className="rounded-lg border p-2" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
             </div>
-            <div className="mt-5 grid gap-4">
+            <div className="mt-4 grid gap-3">
               <input className="input" placeholder="Judul dokumen" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               <input className="input" required placeholder="Kategori, contoh GENERAL / PROJECT / PHOTO" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
               <select className="input" value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
@@ -260,7 +260,7 @@ export function DocumentManagement() {
               <input className="input" type="file" required onChange={(event) => setForm({ ...form, file: event.target.files?.[0] || null })} />
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="rounded-xl border px-5 py-3 font-semibold text-slate-600" onClick={() => setIsFormOpen(false)}>Batal</button>
+              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Mengupload...' : 'Upload'}</button>
             </div>
           </form>
@@ -268,14 +268,14 @@ export function DocumentManagement() {
       )}
 
       {selectedDocument && (
-        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/45 p-4">
-          <div className="card w-full max-w-2xl p-6">
+        <div className="modal-backdrop z-40">
+          <div className="modal-card max-w-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-gold">{selectedDocument.category}</p>
-                <h3 className="text-2xl font-black text-navy">{selectedDocument.title}</h3>
+                <h3 className="text-xl font-semibold text-slate-950">{selectedDocument.title}</h3>
               </div>
-              <button className="rounded-lg border p-2" onClick={() => setSelectedDocument(null)}><X size={16} /></button>
+              <button className="icon-button" onClick={() => setSelectedDocument(null)}><X size={16} /></button>
             </div>
             <div className="mt-5 grid gap-3 text-sm">
               <p><span className="text-slate-500">File:</span> {selectedDocument.fileName}</p>
