@@ -28,29 +28,31 @@ export default function DashboardPage() {
   }, []);
 
   return <DashboardShell>
-    {canAccess(role, 'analytics') && <DashboardAnalytics />}
+    <div className="min-w-0">
+      {canAccess(role, 'analytics') && <DashboardAnalytics />}
 
-    {canAccess(role, 'projects') && <ProjectManagement />}
+      {canAccess(role, 'projects') && <ProjectManagement />}
 
-    {(canAccess(role, 'customers') || canAccess(role, 'quotes')) && (
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {canAccess(role, 'customers') && <CustomerManagement />}
-        {canAccess(role, 'quotes') && <QuoteManagement />}
-      </div>
-    )}
+      {(canAccess(role, 'customers') || canAccess(role, 'quotes')) && (
+        <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-2">
+          {canAccess(role, 'customers') && <CustomerManagement />}
+          {canAccess(role, 'quotes') && <QuoteManagement />}
+        </div>
+      )}
 
-    {(canAccess(role, 'invoices') || canAccess(role, 'finance') || canAccess(role, 'materials')) && (
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {canAccess(role, 'invoices') && <InvoiceManagement />}
-        {canAccess(role, 'finance') && <FinanceManagement />}
-        {canAccess(role, 'materials') && <MaterialManagement />}
-      </div>
-    )}
+      {(canAccess(role, 'invoices') || canAccess(role, 'finance') || canAccess(role, 'materials')) && (
+        <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-3">
+          {canAccess(role, 'invoices') && <InvoiceManagement />}
+          {canAccess(role, 'finance') && <FinanceManagement />}
+          {canAccess(role, 'materials') && <MaterialManagement />}
+        </div>
+      )}
 
-    {canAccess(role, 'reports') && <DailyReportManagement />}
-    {canAccess(role, 'documents') && <DocumentManagement />}
-    {canAccess(role, 'users') && <UserManagement />}
-    {canAccess(role, 'backups') && <BackupManagement />}
-    <ExportCenter role={role} />
+      {canAccess(role, 'reports') && <DailyReportManagement />}
+      {canAccess(role, 'documents') && <DocumentManagement />}
+      {canAccess(role, 'users') && <UserManagement />}
+      {canAccess(role, 'backups') && <BackupManagement />}
+      <ExportCenter role={role} />
+    </div>
   </DashboardShell>;
 }

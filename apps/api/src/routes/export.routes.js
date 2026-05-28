@@ -2,6 +2,7 @@ import { Router } from 'express';
 import ExcelJS from 'exceljs';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
+import { getCompanyWhere } from '../utils/company.js';
 import { createBrandedPdf, drawSignature, drawTableHeader, drawTableRow, formatCurrency, formatDate, keyValue, sectionTitle } from '../utils/pdf.js';
 
 const router = Router();
@@ -22,8 +23,8 @@ async function excel(res, filename, sheetName, columns, rows) {
   res.end();
 }
 
-router.get('/reports/daily.pdf', requireAuth, allowRoles(...reportRoles), async (_, res) => {
-  const rows = await prisma.dailyReport.findMany({ include: { project: true, technician: true }, orderBy: { date: 'desc' } });
+router.get('/reports/daily.pdf', requireAuth, allowRoles(...reportRoles), async (req, res) => {
+  const rows = await prisma.dailyReport.findMany({ where: getCompanyWhere(req), include: { project: true, technician: true }, orderBy: { date: 'desc' } });
   const doc = createBrandedPdf(res, 'laporan-harian.pdf', 'Laporan Harian Teknisi');
   const columns = [
     { label: 'No', x: 48, width: 24 },
@@ -43,8 +44,8 @@ router.get('/reports/daily.pdf', requireAuth, allowRoles(...reportRoles), async 
   drawSignature(doc, 'Mengetahui');
   doc.end();
 });
-router.get('/projects/recap.pdf', requireAuth, allowRoles(...projectRoles), async (_, res) => {
-  const rows = await prisma.project.findMany({ include: { customer: true }, orderBy: { createdAt: 'desc' } });
+router.get('/projects/recap.pdf', requireAuth, allowRoles(...projectRoles), async (req, res) => {
+  const rows = await prisma.project.findMany({ where: getCompanyWhere(req), include: { customer: true }, orderBy: { createdAt: 'desc' } });
   const doc = createBrandedPdf(res, 'rekap-proyek.pdf', 'Rekap Proyek');
   const columns = [
     { label: 'No', x: 48, width: 24 },
@@ -66,8 +67,8 @@ router.get('/projects/recap.pdf', requireAuth, allowRoles(...projectRoles), asyn
   drawSignature(doc, 'Disahkan oleh');
   doc.end();
 });
-router.get('/finance/report.pdf', requireAuth, allowRoles(...financeRoles), async (_, res) => {
-  const rows = await prisma.transaction.findMany({ include: { project: true }, orderBy: { date: 'desc' } });
+router.get('/finance/report.pdf', requireAuth, allowRoles(...financeRoles), async (req, res) => {
+  const rows = await prisma.transaction.findMany({ where: getCompanyWhere(req), include: { project: true }, orderBy: { date: 'desc' } });
   const income = rows.filter((x) => x.type === 'INCOME').reduce((s, x) => s + Number(x.amount), 0);
   const expense = rows.filter((x) => x.type === 'EXPENSE').reduce((s, x) => s + Number(x.amount), 0);
   const doc = createBrandedPdf(res, 'laporan-keuangan.pdf', 'Laporan Keuangan');
@@ -96,29 +97,29 @@ router.get('/finance/report.pdf', requireAuth, allowRoles(...financeRoles), asyn
   drawSignature(doc, 'Disetujui oleh');
   doc.end();
 });
-router.get('/projects.xlsx', requireAuth, allowRoles(...projectRoles), async (_, res) => {
-  const rows = await prisma.project.findMany({ include: { customer: true }, orderBy: { createdAt: 'desc' } });
+router.get('/projects.xlsx', requireAuth, allowRoles(...projectRoles), async (req, res) => {
+  const rows = await prisma.project.findMany({ where: getCompanyWhere(req), include: { customer: true }, orderBy: { createdAt: 'desc' } });
   await excel(res, 'proyek.xlsx', 'Proyek', [
     { header: 'Kode', key: 'code' }, { header: 'Nama', key: 'name' }, { header: 'Pelanggan', key: 'customer' },
     { header: 'Status', key: 'status' }, { header: 'Progress', key: 'progress' }, { header: 'Nilai Kontrak', key: 'contractValue' }
   ], rows.map((x) => ({ code: x.code, name: x.name, customer: x.customer?.name || '', status: x.status, progress: x.progress, contractValue: Number(x.contractValue || 0) })));
 });
-router.get('/customers.xlsx', requireAuth, allowRoles(...customerRoles), async (_, res) => {
-  const rows = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } });
+router.get('/customers.xlsx', requireAuth, allowRoles(...customerRoles), async (req, res) => {
+  const rows = await prisma.customer.findMany({ where: getCompanyWhere(req), orderBy: { createdAt: 'desc' } });
   await excel(res, 'pelanggan.xlsx', 'Pelanggan', [
     { header: 'Nama', key: 'name' }, { header: 'PIC', key: 'picName' }, { header: 'Telepon', key: 'phone' },
     { header: 'Email', key: 'email' }, { header: 'Segment', key: 'segment' }, { header: 'Status', key: 'status' }
   ], rows);
 });
-router.get('/invoices.xlsx', requireAuth, allowRoles(...invoiceRoles), async (_, res) => {
-  const rows = await prisma.invoice.findMany({ include: { customer: true, project: true }, orderBy: { createdAt: 'desc' } });
+router.get('/invoices.xlsx', requireAuth, allowRoles(...invoiceRoles), async (req, res) => {
+  const rows = await prisma.invoice.findMany({ where: getCompanyWhere(req), include: { customer: true, project: true }, orderBy: { createdAt: 'desc' } });
   await excel(res, 'invoice.xlsx', 'Invoice', [
     { header: 'Nomor', key: 'number' }, { header: 'Judul', key: 'title' }, { header: 'Pelanggan', key: 'customer' },
     { header: 'Proyek', key: 'project' }, { header: 'Status', key: 'status' }, { header: 'Total', key: 'total' }
   ], rows.map((x) => ({ number: x.number, title: x.title, customer: x.customer?.name || '', project: x.project?.name || '', status: x.status, total: Number(x.total) })));
 });
-router.get('/finance.xlsx', requireAuth, allowRoles(...financeRoles), async (_, res) => {
-  const rows = await prisma.transaction.findMany({ include: { project: true }, orderBy: { date: 'desc' } });
+router.get('/finance.xlsx', requireAuth, allowRoles(...financeRoles), async (req, res) => {
+  const rows = await prisma.transaction.findMany({ where: getCompanyWhere(req), include: { project: true }, orderBy: { date: 'desc' } });
   await excel(res, 'transaksi-keuangan.xlsx', 'Transaksi', [
     { header: 'Tanggal', key: 'date' }, { header: 'Tipe', key: 'type' }, { header: 'Kategori', key: 'category' },
     { header: 'Deskripsi', key: 'description' }, { header: 'Nominal', key: 'amount' }, { header: 'Proyek', key: 'project' }

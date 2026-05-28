@@ -17,6 +17,7 @@ import { exportRoutes } from './routes/export.routes.js';
 import { analyticsRoutes } from './routes/analytics.routes.js';
 import { backupRoutes } from './routes/backup.routes.js';
 import { userRoutes } from './routes/user.routes.js';
+import { companyRoutes } from './routes/company.routes.js';
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET wajib diisi di environment API');
@@ -47,6 +48,7 @@ app.use('/api/exports', exportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/backups', backupRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/companies', companyRoutes);
 
 app.use((_, res) => res.status(404).json({ code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan' }));
 app.use((error, _, res, __) => {

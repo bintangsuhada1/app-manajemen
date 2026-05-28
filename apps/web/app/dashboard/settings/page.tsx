@@ -27,7 +27,17 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { DashboardShell } from '@/components/DashboardShell';
-import { DEFAULT_COMPANY_ID, companies as defaultCompanies, getActiveCompany, getCompanies, saveCompanies, setActiveCompany } from '@/lib/companies';
+import {
+  DEFAULT_COMPANY_ID,
+  companies as defaultCompanies,
+  createCompany as createCompanyRequest,
+  deleteCompany as deleteCompanyRequest,
+  fetchCompanies,
+  getActiveCompany,
+  getCompanies,
+  setActiveCompany,
+  updateCompany as updateCompanyRequest
+} from '@/lib/companies';
 import type { Company } from '@/lib/companies';
 
 type SessionUser = {
@@ -159,10 +169,9 @@ export default function DashboardSettingsPage() {
   const [companyError, setCompanyError] = useState('');
   const [toast, setToast] = useState('');
   const [currentTime, setCurrentTime] = useState('');
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
 
   useEffect(() => {
-    setCompanyList(getCompanies());
-    setActiveCompanyState(getActiveCompany());
     setCurrentTime(new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()));
     try {
       const storedUser = window.localStorage.getItem('user');
@@ -171,6 +180,33 @@ export default function DashboardSettingsPage() {
       setUser(null);
     }
   }, []);
+
+  useEffect(() => {
+    async function loadCompanies() {
+      if (!token) return;
+      try {
+        const companies = await fetchCompanies(token);
+        setCompanyList(companies);
+        setActiveCompanyState(getActiveCompany());
+      } catch (error) {
+        if (error instanceof Response && error.status === 401) {
+          window.localStorage.removeItem('token');
+          window.localStorage.removeItem('user');
+          router.replace('/login');
+          return;
+        }
+        if (error instanceof Response && error.status === 403) {
+          router.replace('/forbidden');
+          return;
+        }
+        setCompanyError('Gagal memuat data perusahaan dari server.');
+        setCompanyList(getCompanies());
+        setActiveCompanyState(getActiveCompany());
+      }
+    }
+
+    void loadCompanies();
+  }, [router, token]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -225,14 +261,12 @@ export default function DashboardSettingsPage() {
     setCompanyForm(emptyCompanyForm);
   }
 
-  function persistCompanyList(nextCompanies: Company[]) {
-    const savedCompanies = saveCompanies(nextCompanies);
-    setCompanyList(savedCompanies);
-    setActiveCompanyState(getActiveCompany());
-    return savedCompanies;
+  async function parseCompanyError(response: Response, fallback: string) {
+    const payload = await response.json().catch(() => null);
+    return payload?.message || fallback;
   }
 
-  function submitCompanyForm(event: FormEvent<HTMLFormElement>) {
+  async function submitCompanyForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextCompany: Company = {
       id: companyForm.id.trim(),
@@ -258,41 +292,68 @@ export default function DashboardSettingsPage() {
       return;
     }
 
-    const duplicate = companyList.some((company) => company.id === nextCompany.id && company.id !== editingCompanyId);
-    if (duplicate) {
-      setCompanyError('Kode Perusahaan sudah dipakai. Gunakan kode lain.');
-      return;
+    try {
+      const savedCompany = editingCompanyId
+        ? await updateCompanyRequest(token, editingCompanyId, nextCompany)
+        : await createCompanyRequest(token, nextCompany);
+      const companies = await fetchCompanies(token);
+      setCompanyList(companies);
+
+      if (editingCompanyId && activeCompany.id === editingCompanyId) {
+        setActiveCompanyState(setActiveCompany(savedCompany.id));
+      }
+
+      showToast(editingCompanyId ? 'Perusahaan berhasil diperbarui.' : 'Perusahaan baru berhasil ditambahkan.');
+      closeCompanyForm();
+    } catch (error) {
+      if (error instanceof Response && error.status === 401) {
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('user');
+        router.replace('/login');
+        return;
+      }
+      if (error instanceof Response && error.status === 403) {
+        router.replace('/forbidden');
+        return;
+      }
+      if (error instanceof Response) {
+        setCompanyError(await parseCompanyError(error, 'Gagal menyimpan perusahaan.'));
+        return;
+      }
+      setCompanyError('Gagal menyimpan perusahaan.');
     }
-
-    const nextCompanies = editingCompanyId
-      ? companyList.map((company) => company.id === editingCompanyId ? nextCompany : company)
-      : [...companyList, nextCompany];
-    persistCompanyList(nextCompanies);
-
-    if (editingCompanyId && activeCompany.id === editingCompanyId) {
-      setActiveCompanyState(setActiveCompany(nextCompany.id));
-    }
-
-    showToast(editingCompanyId ? 'Perusahaan berhasil diperbarui.' : 'Perusahaan baru berhasil ditambahkan.');
-    closeCompanyForm();
   }
 
-  function deleteCompany(company: Company) {
+  async function deleteCompany(company: Company) {
     if (!window.confirm(`Hapus perusahaan "${company.name}"?`)) return;
 
-    const nextCompanies = companyList.filter((item) => item.id !== company.id);
-    if (activeCompany.id === company.id) {
-      const fallbackCompany = company.id === DEFAULT_COMPANY_ID && !nextCompanies.some((item) => item.id === DEFAULT_COMPANY_ID)
-        ? defaultCompanies.find((item) => item.id === DEFAULT_COMPANY_ID)
-        : null;
-      const savedCompanies = persistCompanyList(fallbackCompany ? [fallbackCompany, ...nextCompanies] : nextCompanies);
-      setCompanyList(savedCompanies);
-      setActiveCompanyState(setActiveCompany(DEFAULT_COMPANY_ID));
-      showToast('Perusahaan dihapus. Perusahaan aktif dipindahkan ke PT Jurti Agung Mulia.');
-      return;
+    try {
+      await deleteCompanyRequest(token, company.id);
+      const companies = await fetchCompanies(token);
+      setCompanyList(companies);
+      if (activeCompany.id === company.id) {
+        setActiveCompanyState(setActiveCompany(DEFAULT_COMPANY_ID));
+        showToast('Perusahaan dihapus. Perusahaan aktif dipindahkan ke PT Jurti Agung Mulia.');
+        return;
+      }
+      showToast('Perusahaan berhasil dihapus.');
+    } catch (error) {
+      if (error instanceof Response && error.status === 401) {
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('user');
+        router.replace('/login');
+        return;
+      }
+      if (error instanceof Response && error.status === 403) {
+        router.replace('/forbidden');
+        return;
+      }
+      if (error instanceof Response) {
+        setCompanyError(await parseCompanyError(error, 'Perusahaan tidak bisa dihapus.'));
+        return;
+      }
+      setCompanyError('Perusahaan tidak bisa dihapus.');
     }
-    persistCompanyList(nextCompanies);
-    showToast('Perusahaan berhasil dihapus.');
   }
 
   function handleLogout() {

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 
 const router = Router();
 const readRoles = ['SUPER_ADMIN', 'DIREKTUR', 'PROJECT_MANAGER'];
@@ -25,10 +26,11 @@ const movementSchema = z.object({
   note: z.string().trim().max(500).transform(sanitizeText).optional().nullable()
 });
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [projects, categories] = await Promise.all([
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    prisma.material.findMany({ distinct: ['category'], select: { category: true }, orderBy: { category: 'asc' } })
+    prisma.project.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.material.findMany({ where: companyWhere, distinct: ['category'], select: { category: true }, orderBy: { category: 'asc' } })
   ]);
   res.json({
     projects,
@@ -39,9 +41,11 @@ router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => 
 router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
   const q = req.query.q?.toString() || '';
   const category = req.query.category?.toString();
+  const companyWhere = getCompanyWhere(req);
   const data = await prisma.material.findMany({
     where: {
       AND: [
+        companyWhere,
         q ? { OR: [{ name: { contains: q } }, { sku: { contains: q } }] } : {},
         category ? { category } : {}
       ]
@@ -55,16 +59,20 @@ router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
 router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = materialSchema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
-  res.status(201).json(await prisma.material.create({ data: parsed.data }));
+  res.status(201).json(await prisma.material.create({ data: withCompanyId(req, parsed.data) }));
 });
 
 router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = materialSchema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
+  const existing = await prisma.material.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Material tidak ditemukan');
   res.json(await prisma.material.update({ where: { id: req.params.id }, data: parsed.data }));
 });
 
 router.delete('/:id', requireAuth, allowRoles('SUPER_ADMIN'), async (req, res) => {
+  const existing = await prisma.material.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Material tidak ditemukan');
   await prisma.material.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
@@ -74,7 +82,7 @@ router.post('/movement', requireAuth, allowRoles(...movementRoles), async (req, 
   if (!parsed.success) return validationError(res, parsed.error);
   const payload = parsed.data;
   const result = await prisma.$transaction(async (tx) => {
-    const material = await tx.material.findUnique({ where: { id: payload.materialId } });
+    const material = await tx.material.findFirst({ where: { id: payload.materialId, ...getCompanyWhere(req) } });
     if (!material) throw new Error('MATERIAL_NOT_FOUND');
 
     const currentStock = Number(material.stock);
@@ -86,7 +94,7 @@ router.post('/movement', requireAuth, allowRoles(...movementRoles), async (req, 
     const nextStock = currentStock + delta;
     if (nextStock < 0) throw new Error('INSUFFICIENT_STOCK');
 
-    const movement = await tx.materialMovement.create({ data: payload, include: { project: true } });
+    const movement = await tx.materialMovement.create({ data: withCompanyId(req, payload), include: { project: true } });
     const updatedMaterial = await tx.material.update({
       where: { id: payload.materialId },
       data: { stock: nextStock }

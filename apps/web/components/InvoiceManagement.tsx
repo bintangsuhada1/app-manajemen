@@ -1,10 +1,11 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Download, Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { downloadProtectedFile } from '@/lib/download';
 import { apiUrl } from '@/lib/api';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
@@ -102,18 +103,18 @@ export function InvoiceManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => getActiveCompanyId());
 
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
-  const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}` } : undefined, [token]);
   const subtotal = form.items.reduce((sum, item) => sum + Number(item.qty || 0) * parseRupiah(item.unitPrice || 0), 0);
   const total = subtotal + parseRupiah(form.tax || 0);
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await fetch(`${apiUrl}/api${path}`, {
+    const response = await fetch(`${apiUrl}/api${withActiveCompanyId(path, activeCompanyId)}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        ...(authHeaders || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers || {})
       }
     });
@@ -160,6 +161,21 @@ export function InvoiceManagement() {
   useEffect(() => {
     void loadInvoices();
     void loadOptions();
+  }, [activeCompanyId, token]);
+
+  useEffect(() => {
+    function handleCompanyChange() {
+      setSelectedInvoice(null);
+      setEditingInvoice(null);
+      setActiveCompanyId(getActiveCompanyId());
+    }
+
+    window.addEventListener(ACTIVE_COMPANY_CHANGED_EVENT, handleCompanyChange);
+    window.addEventListener('storage', handleCompanyChange);
+    return () => {
+      window.removeEventListener(ACTIVE_COMPANY_CHANGED_EVENT, handleCompanyChange);
+      window.removeEventListener('storage', handleCompanyChange);
+    };
   }, []);
 
   function openCreateForm() {
@@ -289,7 +305,7 @@ export function InvoiceManagement() {
               </div>
               <div className="flex gap-2">
                 <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Lihat detail" onClick={() => void openDetail(invoice.id)}><Eye size={16} /></button>
-                <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Download PDF" onClick={() => void downloadProtectedFile(`/invoices/${invoice.id}/pdf`, `invoice-${invoice.number}.pdf`, token, () => { window.localStorage.removeItem('token'); window.localStorage.removeItem('user'); router.replace('/login'); }, () => router.replace('/forbidden'))}><Download size={16} /></button>
+                <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Download PDF" onClick={() => void downloadProtectedFile(withActiveCompanyId(`/invoices/${invoice.id}/pdf`, activeCompanyId), `invoice-${invoice.number}.pdf`, token, () => { window.localStorage.removeItem('token'); window.localStorage.removeItem('user'); router.replace('/login'); }, () => router.replace('/forbidden'))}><Download size={16} /></button>
                 <button className="rounded-lg border p-2 text-slate-600 hover:bg-slate-50" title="Edit invoice" onClick={() => openEditForm(invoice)}><Pencil size={16} /></button>
                 <button className="rounded-lg border p-2 text-red-600 hover:bg-red-50" title="Hapus invoice" onClick={() => void deleteInvoice(invoice)}><Trash2 size={16} /></button>
               </div>

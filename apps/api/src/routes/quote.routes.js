@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 import { createBrandedPdf, drawSignature, drawTableHeader, drawTableRow, formatCurrency, formatDate, keyValue, sectionTitle } from '../utils/pdf.js';
 
 const router = Router();
@@ -66,6 +67,7 @@ router.post('/public-request', async (req, res) => {
   try {
     let customer = await prisma.customer.findFirst({
       where: {
+        ...getCompanyWhere(req),
         OR: [
           { name: companyName },
           phone ? { phone } : undefined,
@@ -76,14 +78,14 @@ router.post('/public-request', async (req, res) => {
 
     if (!customer) {
       customer = await prisma.customer.create({
-        data: {
+        data: withCompanyId(req, {
           name: companyName,
           picName,
           phone,
           email,
           status: 'PROSPECT',
           notes: 'Mendaftar secara otomatis via Request Penawaran di landing page website.'
-        }
+        })
       });
     }
 
@@ -100,7 +102,7 @@ router.post('/public-request', async (req, res) => {
         tax: 0,
         discount: 0,
         total: 0,
-        customerId: customer.id,
+        ...withCompanyId(req, { customerId: customer.id }),
         notes: `Kebutuhan lapangan:\n${description || '-'}`,
         items: {
           create: [
@@ -124,20 +126,21 @@ router.post('/public-request', async (req, res) => {
   }
 });
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [customers, projects] = await Promise.all([
-    prisma.customer.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
+    prisma.customer.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.project.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } })
   ]);
   res.json({ customers, projects, statuses: quoteStatuses });
 });
 
-router.get('/', requireAuth, allowRoles(...readRoles), async (_, res) => {
-  res.json(await prisma.quote.findMany({ include: quoteInclude, orderBy: { createdAt: 'desc' } }));
+router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  res.json(await prisma.quote.findMany({ where: getCompanyWhere(req), include: quoteInclude, orderBy: { createdAt: 'desc' } }));
 });
 
 router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const quote = await prisma.quote.findUnique({ where: { id: req.params.id }, include: quoteInclude });
+  const quote = await prisma.quote.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) }, include: quoteInclude });
   if (!quote) return apiError(res, 404, 'NOT_FOUND', 'Penawaran tidak ditemukan');
   res.json(quote);
 });
@@ -147,7 +150,7 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   if (!parsed.success) return validationError(res, parsed.error);
   const { quote, items } = buildQuotePayload(parsed.data);
   const data = await prisma.quote.create({
-    data: { ...quote, items: { create: items } },
+    data: { ...withCompanyId(req, quote), items: { create: items } },
     include: quoteInclude
   });
   res.status(201).json(data);
@@ -156,6 +159,8 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = quoteSchema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
+  const existing = await prisma.quote.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Penawaran tidak ditemukan');
   const { quote, items } = buildQuotePayload(parsed.data);
   const data = await prisma.quote.update({
     where: { id: req.params.id },
@@ -172,12 +177,14 @@ router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 });
 
 router.delete('/:id', requireAuth, allowRoles('SUPER_ADMIN'), async (req, res) => {
+  const existing = await prisma.quote.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Penawaran tidak ditemukan');
   await prisma.quote.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
 
 router.get('/:id/pdf', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const quote = await prisma.quote.findUnique({ where: { id: req.params.id }, include: quoteInclude });
+  const quote = await prisma.quote.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) }, include: quoteInclude });
   if (!quote) return apiError(res, 404, 'NOT_FOUND', 'Penawaran tidak ditemukan');
   const doc = createBrandedPdf(res, `penawaran-${quote.number}.pdf`, 'Quotation', 'inline');
   sectionTitle(doc, 'Informasi Penawaran');

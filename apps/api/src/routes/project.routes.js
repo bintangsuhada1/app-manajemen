@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 
 const router = Router();
 const readRoles = ['SUPER_ADMIN', 'DIREKTUR', 'PROJECT_MANAGER'];
@@ -64,9 +65,10 @@ async function syncPic(projectId, picUserId, tx) {
   }
 }
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [customers, users] = await Promise.all([
-    prisma.customer.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.customer.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
     prisma.user.findMany({
       where: { isActive: true },
       select: { id: true, name: true, role: true },
@@ -79,9 +81,11 @@ router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => 
 router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
   const q = req.query.q?.toString() || '';
   const status = req.query.status?.toString();
+  const companyWhere = getCompanyWhere(req);
   const data = await prisma.project.findMany({
     where: {
       AND: [
+        companyWhere,
         q ? { OR: [{ name: { contains: q } }, { code: { contains: q } }, { location: { contains: q } }] } : {},
         status ? { status } : {}
       ]
@@ -93,8 +97,8 @@ router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
 });
 
 router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const data = await prisma.project.findUnique({
-    where: { id: req.params.id },
+  const data = await prisma.project.findFirst({
+    where: { id: req.params.id, ...getCompanyWhere(req) },
     include: {
       ...projectInclude,
       dailyReports: { orderBy: { date: 'desc' }, take: 5 },
@@ -112,7 +116,7 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 
   const { project, picUserId } = toProjectPayload(parsed.data);
   const data = await prisma.$transaction(async (tx) => {
-    const created = await tx.project.create({ data: project });
+    const created = await tx.project.create({ data: withCompanyId(req, project) });
     await syncPic(created.id, picUserId, tx);
     return tx.project.findUnique({ where: { id: created.id }, include: projectInclude });
   });
@@ -123,6 +127,8 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
+  const existing = await prisma.project.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Proyek tidak ditemukan');
 
   const { project, picUserId } = toProjectPayload(parsed.data);
   const data = await prisma.$transaction(async (tx) => {
@@ -137,8 +143,8 @@ router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 router.delete('/:id', requireAuth, allowRoles('SUPER_ADMIN', 'DIREKTUR'), async (req, res) => {
   try {
     const projectId = req.params.id;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, ...getCompanyWhere(req) },
       include: {
         _count: {
           select: {

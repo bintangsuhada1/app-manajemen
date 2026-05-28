@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 
 const router = Router();
 const readRoles = ['SUPER_ADMIN', 'DIREKTUR', 'PROJECT_MANAGER', 'TEKNISI'];
@@ -19,12 +20,13 @@ const schema = z.object({
 });
 const reportInclude = { project: true, technician: true, photos: true };
 
-function buildWhere(query) {
+function buildWhere(query, companyWhere = {}) {
   const projectId = query.projectId?.toString();
   const technicianId = query.technicianId?.toString();
   const from = query.from?.toString();
   const to = query.to?.toString();
   return {
+    ...companyWhere,
     ...(projectId ? { projectId } : {}),
     ...(technicianId ? { technicianId } : {}),
     ...(from || to ? {
@@ -43,9 +45,10 @@ function serializePayload(value) {
   };
 }
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [projects, technicians] = await Promise.all([
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.project.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
     prisma.user.findMany({
       where: { isActive: true },
       select: { id: true, name: true, role: true },
@@ -57,14 +60,14 @@ router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => 
 
 router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
   res.json(await prisma.dailyReport.findMany({
-    where: buildWhere(req.query),
+    where: buildWhere(req.query, getCompanyWhere(req)),
     include: reportInclude,
     orderBy: { date: 'desc' }
   }));
 });
 
 router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const report = await prisma.dailyReport.findUnique({ where: { id: req.params.id }, include: reportInclude });
+  const report = await prisma.dailyReport.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) }, include: reportInclude });
   if (!report) return apiError(res, 404, 'NOT_FOUND', 'Laporan tidak ditemukan');
   res.json(report);
 });
@@ -73,7 +76,7 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
   res.status(201).json(await prisma.dailyReport.create({
-    data: serializePayload(parsed.data),
+    data: withCompanyId(req, serializePayload(parsed.data)),
     include: reportInclude
   }));
 });
@@ -81,6 +84,8 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
+  const existing = await prisma.dailyReport.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Laporan tidak ditemukan');
   res.json(await prisma.dailyReport.update({
     where: { id: req.params.id },
     data: serializePayload(parsed.data),
@@ -89,6 +94,8 @@ router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 });
 
 router.delete('/:id', requireAuth, allowRoles('SUPER_ADMIN', 'PROJECT_MANAGER'), async (req, res) => {
+  const existing = await prisma.dailyReport.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Laporan tidak ditemukan');
   await prisma.dailyReport.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });

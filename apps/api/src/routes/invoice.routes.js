@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 import { createBrandedPdf, drawSignature, drawTableHeader, drawTableRow, formatCurrency, formatDate, keyValue, sectionTitle } from '../utils/pdf.js';
 
 const router = Router();
@@ -47,20 +48,21 @@ function buildInvoicePayload(value) {
   };
 }
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [customers, projects] = await Promise.all([
-    prisma.customer.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } })
+    prisma.customer.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.project.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } })
   ]);
   res.json({ customers, projects, statuses: invoiceStatuses });
 });
 
-router.get('/', requireAuth, allowRoles(...readRoles), async (_, res) => {
-  res.json(await prisma.invoice.findMany({ include: invoiceInclude, orderBy: { createdAt: 'desc' } }));
+router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  res.json(await prisma.invoice.findMany({ where: getCompanyWhere(req), include: invoiceInclude, orderBy: { createdAt: 'desc' } }));
 });
 
 router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, include: invoiceInclude });
+  const invoice = await prisma.invoice.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) }, include: invoiceInclude });
   if (!invoice) return apiError(res, 404, 'NOT_FOUND', 'Invoice tidak ditemukan');
   res.json(invoice);
 });
@@ -70,7 +72,7 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   if (!parsed.success) return validationError(res, parsed.error);
   const { invoice, items } = buildInvoicePayload(parsed.data);
   const data = await prisma.invoice.create({
-    data: { ...invoice, items: { create: items } },
+    data: { ...withCompanyId(req, invoice), items: { create: items } },
     include: invoiceInclude
   });
   res.status(201).json(data);
@@ -79,6 +81,8 @@ router.post('/', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
   const parsed = invoiceSchema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed.error);
+  const existing = await prisma.invoice.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Invoice tidak ditemukan');
   const { invoice, items } = buildInvoicePayload(parsed.data);
   const data = await prisma.invoice.update({
     where: { id: req.params.id },
@@ -95,12 +99,14 @@ router.put('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
 });
 
 router.delete('/:id', requireAuth, allowRoles('SUPER_ADMIN'), async (req, res) => {
+  const existing = await prisma.invoice.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
+  if (!existing) return apiError(res, 404, 'NOT_FOUND', 'Invoice tidak ditemukan');
   await prisma.invoice.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
 
 router.get('/:id/pdf', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const invoice = await prisma.invoice.findUnique({ where: { id: req.params.id }, include: invoiceInclude });
+  const invoice = await prisma.invoice.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) }, include: invoiceInclude });
   if (!invoice) return apiError(res, 404, 'NOT_FOUND', 'Invoice tidak ditemukan');
   const doc = createBrandedPdf(res, `invoice-${invoice.number}.pdf`, 'Invoice', 'inline');
   sectionTitle(doc, 'Informasi Invoice');

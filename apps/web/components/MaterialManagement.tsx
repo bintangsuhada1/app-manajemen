@@ -1,9 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { parseRupiah } from '@/lib/rupiah';
@@ -66,16 +67,16 @@ export function MaterialManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => getActiveCompanyId());
 
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
-  const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}` } : undefined, [token]);
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await fetch(`${apiUrl}/api${path}`, {
+    const response = await fetch(`${apiUrl}/api${withActiveCompanyId(path, activeCompanyId)}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        ...(authHeaders || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers || {})
       }
     });
@@ -127,6 +128,20 @@ export function MaterialManagement() {
   useEffect(() => {
     void loadMaterials();
     void loadOptions();
+  }, [activeCompanyId, token]);
+
+  useEffect(() => {
+    function handleCompanyChange() {
+      setEditingMaterial(null);
+      setActiveCompanyId(getActiveCompanyId());
+    }
+
+    window.addEventListener(ACTIVE_COMPANY_CHANGED_EVENT, handleCompanyChange);
+    window.addEventListener('storage', handleCompanyChange);
+    return () => {
+      window.removeEventListener(ACTIVE_COMPANY_CHANGED_EVENT, handleCompanyChange);
+      window.removeEventListener('storage', handleCompanyChange);
+    };
   }, []);
 
   function openCreateMaterial() {

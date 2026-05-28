@@ -9,6 +9,7 @@ Fondasi website siap dikembangkan untuk PT Jurti Agung Mulia: landing page compa
 - Auth: JWT + bcrypt
 - RBAC: Super Admin, Direktur, Project Manager, Admin, Keuangan, Teknisi, Marketing
 - PDF/Excel: endpoint placeholder siap disambungkan ke PDFKit / ExcelJS
+- Multi-company: data operasional dipisah per `companyId`
 
 ## Struktur
 ```
@@ -36,7 +37,7 @@ Copy-Item apps/web/.env.example apps/web/.env.local
 4. Migrasi database:
 ```bash
 npm run db:generate
-npm run db:migrate -- --name init
+npm run db:migrate
 npm run db:seed
 ```
 5. Jalankan:
@@ -55,6 +56,51 @@ Jika build frontend gagal karena pesan memori/pagefile Windows, tutup aplikasi b
 
 ## Seed user
 Seed membuat akun role awal. Password awal diambil dari `SEED_DEFAULT_PASSWORD` pada env, bukan dari nilai hardcoded.
+
+Seed juga memastikan company default tersedia:
+- `jurti` - PT Jurti Agung Mulia
+- `sip` - PT SIP
+- `intek` - PT Intek
+- `panglima-bulang` - Mangrove Panglima Bulang
+
+## Multi-Company
+Sistem mendukung pemisahan data per perusahaan. Company disimpan di tabel `Company`, sedangkan data operasional memakai kolom nullable `companyId` agar migrasi aman untuk data lama.
+
+Model yang sudah terkait company:
+- Customer
+- Project
+- Quote
+- Invoice
+- Transaction
+- Material
+- MaterialMovement
+- Supplier
+- DailyReport
+- Document
+
+Frontend menyimpan hanya `activeCompanyId` di localStorage. Daftar perusahaan tidak lagi menjadi source of truth di localStorage; daftar perusahaan dibaca dari backend melalui `/api/companies`.
+
+Endpoint company:
+- `GET /api/companies`
+- `POST /api/companies`
+- `PUT /api/companies/:id`
+- `DELETE /api/companies/:id` hanya berhasil jika company belum punya data relasi
+
+Endpoint ini dilindungi login dan hanya untuk role `SUPER_ADMIN` / `DIREKTUR`.
+
+Migration multi-company bersifat aman:
+- membuat tabel `Company`
+- menambah `companyId` nullable
+- membuat default company PT Jurti Agung Mulia
+- melakukan backfill data lama dengan `companyId = 'jurti'`
+
+Setelah deploy perubahan multi-company, jalankan migrasi sebelum membuat transaksi baru. Ini mencegah foreign key error seperti Prisma `P2003` ketika user memilih company baru.
+
+Validasi manual:
+- Pilih PT Jurti Agung Mulia, data lama harus muncul.
+- Pilih company lain, data PT Jurti harus tersembunyi.
+- Tambah Kas Masuk pada company aktif, dashboard company tersebut harus ikut berubah.
+- Switch kembali ke company lain, transaksi tidak boleh bocor.
 
 ## Production
 - Set `NODE_ENV=production`.

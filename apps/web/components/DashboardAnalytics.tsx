@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, BarChart3, BriefcaseBusiness, Building2, CalendarClock, FileClock, Gauge, Receipt, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, getActiveCompany, type Company } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, getActiveCompany, getActiveCompanyId, type Company, withActiveCompanyId } from '@/lib/companies';
 
 type Deadline = {
   id: string;
@@ -113,7 +113,7 @@ function DashboardStatCard({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase text-slate-500">{title}</p>
-            <h3 className={`${emphasis ? 'text-3xl' : 'text-2xl'} mt-2 break-words font-black text-navy`}>{value}</h3>
+            <h3 className={`${emphasis ? 'text-2xl 2xl:text-3xl' : 'text-2xl'} mt-2 break-words font-black text-navy`}>{value}</h3>
             <p className="mt-2 text-xs font-semibold text-slate-500">{note}</p>
           </div>
           <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ring-1 ${styles.icon}`}>
@@ -139,7 +139,7 @@ function DashboardSectionCard({
   action?: ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm shadow-slate-200/80">
+    <section className="min-w-0 overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm shadow-slate-200/80">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/80 bg-gradient-to-r from-white to-slate-50 px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-navy text-gold shadow-sm">
@@ -150,7 +150,7 @@ function DashboardSectionCard({
             <p className="mt-0.5 text-sm font-medium text-slate-500">{description}</p>
           </div>
         </div>
-        {action}
+        {action && <div className="min-w-0">{action}</div>}
       </div>
       {children}
     </section>
@@ -176,12 +176,13 @@ export function DashboardAnalytics() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
   const [activeCompany, setActiveCompany] = useState<Company>(() => getActiveCompany());
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => getActiveCompanyId());
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
-  const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}` } : undefined, [token]);
 
   useEffect(() => {
     function syncActiveCompany() {
       setActiveCompany(getActiveCompany());
+      setActiveCompanyId(getActiveCompanyId());
     }
 
     window.addEventListener(ACTIVE_COMPANY_CHANGED_EVENT, syncActiveCompany);
@@ -198,7 +199,9 @@ export function DashboardAnalytics() {
     async function loadDashboard() {
       if (!token) return;
       try {
-        const response = await fetch(`${apiUrl}/api/analytics/dashboard`, { headers: authHeaders });
+        const response = await fetch(`${apiUrl}/api${withActiveCompanyId('/analytics/dashboard', activeCompanyId)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
         if (response.status === 401) {
           window.localStorage.removeItem('token');
           window.localStorage.removeItem('user');
@@ -220,7 +223,7 @@ export function DashboardAnalytics() {
       }
     }
     void loadDashboard();
-  }, [authHeaders, router, token]);
+  }, [activeCompanyId, router, token]);
 
   if (error) {
     return (
@@ -253,17 +256,17 @@ export function DashboardAnalytics() {
   const overdueTone = data.kpis.invoiceOverdue > 0 ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700';
   const chartHasData = chart.some((row) => row.in > 0 || row.out > 0);
 
-  return <>
+  return <div className="min-w-0">
     <section className="mb-6 overflow-hidden rounded-lg border border-navy/10 bg-white shadow-premium">
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="relative overflow-hidden bg-navy p-6 text-white sm:p-8">
+      <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+        <div className="relative min-w-0 overflow-hidden bg-navy p-5 text-white sm:p-8">
           <div className="absolute inset-y-0 right-0 w-1/2 bg-[linear-gradient(135deg,rgba(245,165,36,0.18),rgba(255,255,255,0))]" />
-          <div className="relative">
+          <div className="relative min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold uppercase text-gold">
               <BarChart3 size={14} />
               Ringkasan Operasional
             </div>
-            <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight">
+            <h1 className="mt-5 max-w-3xl break-words text-2xl font-black leading-tight sm:text-3xl">
               Command center operasional {activeCompany.name}
             </h1>
             <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-200">
@@ -281,9 +284,9 @@ export function DashboardAnalytics() {
             </div>
           </div>
         </div>
-        <div className="border-t border-slate-200 bg-white p-6 lg:border-l lg:border-t-0">
+        <div className="min-w-0 border-t border-slate-200 bg-white p-5 sm:p-6 xl:border-l xl:border-t-0">
           <p className="text-xs font-bold uppercase text-slate-500">Net cashflow</p>
-          <p className="mt-3 break-words text-3xl font-black text-navy">{formatCurrency(netCash)}</p>
+          <p className="mt-3 break-words text-2xl font-black text-navy 2xl:text-3xl">{formatCurrency(netCash)}</p>
           <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between gap-4 text-xs font-bold text-slate-500">
               <span>Kas Masuk</span>
@@ -298,34 +301,34 @@ export function DashboardAnalytics() {
       </div>
     </section>
 
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard title="Proyek Aktif" value={data.kpis.activeProjects.toString()} note="Status berjalan" icon={BriefcaseBusiness} tone="navy" />
       <DashboardStatCard title="Customer" value={data.kpis.customers.toString()} note="Total customer" icon={Building2} tone="slate" />
       <DashboardStatCard title="Quotation Pending" value={data.kpis.pendingQuotes.toString()} note="Draft atau terkirim" icon={FileClock} tone="gold" />
       <DashboardStatCard title="Invoice Total" value={formatCurrency(data.kpis.invoiceTotal)} note="Tidak termasuk batal" icon={Receipt} tone="sky" emphasis />
     </div>
 
-    <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="mt-4 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard title="Invoice Overdue" value={data.kpis.invoiceOverdue.toString()} note="Lewat jatuh tempo" icon={CalendarClock} tone="rose" />
       <DashboardStatCard title="Kas Masuk" value={formatCurrency(data.kpis.income)} note="Seluruh transaksi" icon={TrendingUp} tone="emerald" emphasis />
       <DashboardStatCard title="Kas Keluar" value={formatCurrency(data.kpis.expense)} note="Seluruh transaksi" icon={TrendingDown} tone="rose" emphasis />
       <DashboardStatCard title="Saldo" value={formatCurrency(data.kpis.balance)} note="Kas masuk dikurangi keluar" icon={Wallet} tone="gold" emphasis />
     </div>
 
-    <div className="mt-6 grid gap-6 lg:grid-cols-3">
-      <div id="analitik" className="lg:col-span-2">
+    <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-3">
+      <div id="analitik" className="min-w-0 xl:col-span-2">
         <DashboardSectionCard
           title="Grafik Keuangan"
           description="Kas masuk dan keluar per bulan."
           icon={BarChart3}
           action={(
-            <div className="flex items-center gap-4 text-xs font-bold">
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
               <span className="inline-flex items-center gap-2 text-emerald-700"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Kas Masuk</span>
               <span className="inline-flex items-center gap-2 text-rose-700"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" />Kas Keluar</span>
             </div>
           )}
         >
-          <div className="h-80 p-4">
+          <div className="h-72 min-w-0 p-4 sm:h-80">
             {chartHasData ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chart} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
@@ -376,5 +379,5 @@ export function DashboardAnalytics() {
         </div>
       </DashboardSectionCard>
     </div>
-  </>;
+  </div>;
 }

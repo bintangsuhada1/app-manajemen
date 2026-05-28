@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
+import { getCompanyWhere } from '../utils/company.js';
 
 const router = Router();
 const analyticsRoles = ['SUPER_ADMIN', 'DIREKTUR'];
 
-router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (_, res) => {
+router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const now = new Date();
   const deadlineLimit = new Date(now);
   deadlineLimit.setDate(deadlineLimit.getDate() + 14);
@@ -21,22 +23,24 @@ router.get('/dashboard', requireAuth, allowRoles(...analyticsRoles), async (_, r
     chartTransactions,
     deadlines
   ] = await Promise.all([
-    prisma.project.count({ where: { status: 'BERJALAN' } }),
-    prisma.customer.count(),
-    prisma.quote.count({ where: { status: { in: ['DRAFT', 'SENT'] } } }),
+    prisma.project.count({ where: { ...companyWhere, status: 'BERJALAN' } }),
+    prisma.customer.count({ where: companyWhere }),
+    prisma.quote.count({ where: { ...companyWhere, status: { in: ['DRAFT', 'SENT'] } } }),
     prisma.invoice.findMany({
-      where: { status: { not: 'CANCELLED' } },
+      where: { ...companyWhere, status: { not: 'CANCELLED' } },
       select: { total: true, status: true, dueDate: true }
     }),
     prisma.transaction.findMany({
+      where: companyWhere,
       select: { type: true, amount: true, date: true }
     }),
     prisma.transaction.findMany({
-      where: { date: { gte: yearStart, lte: yearEnd } },
+      where: { ...companyWhere, date: { gte: yearStart, lte: yearEnd } },
       select: { type: true, amount: true, date: true }
     }),
     prisma.project.findMany({
       where: {
+        ...companyWhere,
         status: { notIn: ['SELESAI', 'BATAL'] },
         endDate: { lte: deadlineLimit }
       },

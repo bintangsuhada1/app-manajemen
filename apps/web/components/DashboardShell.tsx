@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BarChart3, BriefcaseBusiness, Building2, ClipboardList, FileText, FolderOpen, Home, Menu, Receipt, Wallet, Boxes, LogOut, Settings, Users, X } from 'lucide-react';
 import { canAccess, hashModuleMap, ModuleKey } from '@/lib/permissions';
-import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, getActiveCompany, type Company } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, fetchCompanies, getActiveCompany, type Company } from '@/lib/companies';
 import clsx from 'clsx';
 
 type SessionUser = {
@@ -84,7 +84,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setActiveCompany(getActiveCompany());
+    if (sessionUser.role === 'SUPER_ADMIN' || sessionUser.role === 'DIREKTUR') {
+      void fetchCompanies(token).then(() => setActiveCompany(getActiveCompany())).catch(() => setActiveCompany(getActiveCompany()));
+    } else {
+      setActiveCompany(getActiveCompany());
+    }
     setUser(sessionUser);
     setReady(true);
   }, [router]);
@@ -191,9 +195,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {renderSidebar()}
       </aside>
 
-      <main className="lg:pl-72">
+      <main className="min-w-0 lg:pl-72">
         <div className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-xl lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <button className="icon-button lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Buka navigasi">
                 <Menu size={18} />
@@ -216,7 +220,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="px-4 py-5 lg:px-8 lg:py-8">{children}</div>
+        <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-5 lg:px-8 lg:py-8">{children}</div>
       </main>
     </div>
   );

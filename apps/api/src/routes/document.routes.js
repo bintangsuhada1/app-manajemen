@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../services/prisma.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { apiError, sanitizeText, validationError } from '../utils/http.js';
+import { getCompanyWhere, withCompanyId } from '../utils/company.js';
 
 const upload = multer({ dest: process.env.UPLOAD_DIR || 'uploads', limits: { fileSize: 10 * 1024 * 1024 } });
 const router = Router();
@@ -16,22 +17,24 @@ const uploadSchema = z.object({
   projectId: z.string().trim().optional().nullable()
 });
 
-function buildWhere(query) {
+function buildWhere(query, companyWhere = {}) {
   const projectId = query.projectId?.toString();
   const category = query.category?.toString();
   const mimeType = query.mimeType?.toString();
   return {
+    ...companyWhere,
     ...(projectId ? { projectId } : {}),
     ...(category ? { category } : {}),
     ...(mimeType ? { mimeType: { contains: mimeType } } : {})
   };
 }
 
-router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => {
+router.get('/options', requireAuth, allowRoles(...readRoles), async (req, res) => {
+  const companyWhere = getCompanyWhere(req);
   const [projects, categoryRows, mimeRows] = await Promise.all([
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
-    prisma.document.findMany({ distinct: ['category'], select: { category: true }, orderBy: { category: 'asc' } }),
-    prisma.document.findMany({ distinct: ['mimeType'], select: { mimeType: true }, orderBy: { mimeType: 'asc' } })
+    prisma.project.findMany({ where: companyWhere, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+    prisma.document.findMany({ where: companyWhere, distinct: ['category'], select: { category: true }, orderBy: { category: 'asc' } }),
+    prisma.document.findMany({ where: companyWhere, distinct: ['mimeType'], select: { mimeType: true }, orderBy: { mimeType: 'asc' } })
   ]);
   res.json({
     projects,
@@ -42,15 +45,15 @@ router.get('/options', requireAuth, allowRoles(...readRoles), async (_, res) => 
 
 router.get('/', requireAuth, allowRoles(...readRoles), async (req, res) => {
   res.json(await prisma.document.findMany({
-    where: buildWhere(req.query),
+    where: buildWhere(req.query, getCompanyWhere(req)),
     include: { project: true, uploadedBy: { select: { id: true, name: true, email: true } } },
     orderBy: { createdAt: 'desc' }
   }));
 });
 
 router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const doc = await prisma.document.findUnique({
-    where: { id: req.params.id },
+  const doc = await prisma.document.findFirst({
+    where: { id: req.params.id, ...getCompanyWhere(req) },
     include: { project: true, uploadedBy: { select: { id: true, name: true, email: true } } }
   });
   if (!doc) return apiError(res, 404, 'NOT_FOUND', 'Dokumen tidak ditemukan');
@@ -58,7 +61,7 @@ router.get('/:id', requireAuth, allowRoles(...readRoles), async (req, res) => {
 });
 
 router.get('/:id/file', requireAuth, allowRoles(...readRoles), async (req, res) => {
-  const doc = await prisma.document.findUnique({ where: { id: req.params.id } });
+  const doc = await prisma.document.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
   if (!doc) return apiError(res, 404, 'NOT_FOUND', 'Dokumen tidak ditemukan');
   res.setHeader('Content-Type', doc.mimeType || 'application/octet-stream');
   res.setHeader('Content-Disposition', `inline; filename="${doc.fileName}"`);
@@ -87,7 +90,8 @@ router.post('/upload', requireAuth, allowRoles(...writeRoles), upload.single('fi
       mimeType: file.mimetype,
       size: file.size,
       projectId: payload.projectId,
-      uploadedById: req.user.id
+      uploadedById: req.user.id,
+      ...withCompanyId(req, {})
     },
     include: { project: true, uploadedBy: { select: { id: true, name: true, email: true } } }
   });
@@ -95,7 +99,7 @@ router.post('/upload', requireAuth, allowRoles(...writeRoles), upload.single('fi
 });
 
 router.delete('/:id', requireAuth, allowRoles(...writeRoles), async (req, res) => {
-  const doc = await prisma.document.findUnique({ where: { id: req.params.id } });
+  const doc = await prisma.document.findFirst({ where: { id: req.params.id, ...getCompanyWhere(req) } });
   if (!doc) return apiError(res, 404, 'NOT_FOUND', 'Dokumen tidak ditemukan');
   await prisma.document.delete({ where: { id: req.params.id } });
   await fs.unlink(doc.path).catch(() => {});
