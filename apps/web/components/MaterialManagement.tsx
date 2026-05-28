@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { parseRupiah } from '@/lib/rupiah';
@@ -189,6 +189,7 @@ export function MaterialManagement() {
       setIsMaterialFormOpen(false);
       await loadMaterials();
       await loadOptions();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan material');
     } finally {
@@ -210,6 +211,7 @@ export function MaterialManagement() {
       await request('/materials/movement', { method: 'POST', body: JSON.stringify(payload) });
       setIsMovementFormOpen(false);
       await loadMaterials();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan mutasi');
     } finally {
@@ -224,6 +226,7 @@ export function MaterialManagement() {
       await request<{ ok: true }>(`/materials/${material.id}`, { method: 'DELETE' });
       await loadMaterials();
       await loadOptions();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus material');
     }

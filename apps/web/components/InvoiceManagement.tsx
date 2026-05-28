@@ -5,7 +5,7 @@ import { Download, Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { downloadProtectedFile } from '@/lib/download';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
@@ -257,6 +257,7 @@ export function InvoiceManagement() {
       });
       setIsFormOpen(false);
       await loadInvoices();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan invoice');
     } finally {
@@ -271,6 +272,7 @@ export function InvoiceManagement() {
       await request<{ ok: true }>(`/invoices/${invoice.id}`, { method: 'DELETE' });
       if (selectedInvoice?.id === invoice.id) setSelectedInvoice(null);
       await loadInvoices();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus invoice');
     }

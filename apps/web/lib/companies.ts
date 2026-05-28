@@ -15,6 +15,7 @@ export type Company = {
 export const ACTIVE_COMPANY_KEY = 'activeCompany';
 export const ACTIVE_COMPANY_CHANGED_EVENT = 'active-company-changed';
 export const COMPANIES_CHANGED_EVENT = 'companies-changed';
+export const COMPANY_DATA_CHANGED_EVENT = 'company-data-changed';
 export const DEFAULT_COMPANY_ID = 'jurti';
 
 export const companies: Company[] = [
@@ -49,6 +50,13 @@ export function setCompanyCache(nextCompanies: Company[]) {
   const normalized = nextCompanies.map(normalizeCompany);
   cachedCompanies = normalized;
   if (typeof window !== 'undefined') {
+    const storedId = window.localStorage.getItem(ACTIVE_COMPANY_KEY);
+    const storedCompany = storedId ? normalized.find((company) => company.id === storedId) : null;
+    if (!storedCompany) {
+      const fallback = normalized.find((company) => company.id === DEFAULT_COMPANY_ID) || normalized[0] || companies[0];
+      window.localStorage.setItem(ACTIVE_COMPANY_KEY, fallback.id);
+      window.dispatchEvent(new CustomEvent(ACTIVE_COMPANY_CHANGED_EVENT, { detail: fallback }));
+    }
     window.dispatchEvent(new CustomEvent(COMPANIES_CHANGED_EVENT, { detail: normalized }));
   }
   return normalized;
@@ -65,7 +73,13 @@ export function getActiveCompany() {
   if (typeof window === 'undefined') return getCompanyById(DEFAULT_COMPANY_ID);
 
   const storedId = window.localStorage.getItem(ACTIVE_COMPANY_KEY);
-  const company = getCompanyById(storedId);
+  if (storedId) {
+    const company = getCompanies().find((item) => item.id === storedId);
+    if (company) return company;
+    if (!cachedCompanies) return { id: storedId, name: storedId, code: storedId.toUpperCase(), type: '' };
+  }
+
+  const company = getCompanyById(DEFAULT_COMPANY_ID);
   if (!storedId || storedId !== company.id) {
     window.localStorage.setItem(ACTIVE_COMPANY_KEY, company.id);
   }
@@ -95,6 +109,11 @@ export function withActiveCompanyId(path: string, activeCompanyId = getActiveCom
   const params = new URLSearchParams(query);
   params.set('companyId', companyId);
   return `${pathname}?${params.toString()}`;
+}
+
+export function notifyCompanyDataChanged(companyId = getActiveCompanyId()) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(COMPANY_DATA_CHANGED_EVENT, { detail: { companyId } }));
 }
 
 function authHeaders(token: string | null): Record<string, string> {

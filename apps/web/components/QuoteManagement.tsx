@@ -5,7 +5,7 @@ import { Download, Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { downloadProtectedFile } from '@/lib/download';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
@@ -247,6 +247,7 @@ export function QuoteManagement() {
       });
       setIsFormOpen(false);
       await loadQuotes();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan penawaran');
     } finally {
@@ -261,6 +262,7 @@ export function QuoteManagement() {
       await request<{ ok: true }>(`/quotes/${quote.id}`, { method: 'DELETE' });
       if (selectedQuote?.id === quote.id) setSelectedQuote(null);
       await loadQuotes();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus penawaran');
     }

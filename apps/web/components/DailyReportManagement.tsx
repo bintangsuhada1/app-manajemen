@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 
 type ProjectOption = { id: string; name: string };
 type TechnicianOption = { id: string; name: string; role: string };
@@ -191,6 +191,7 @@ export function DailyReportManagement() {
       });
       setIsFormOpen(false);
       await loadReports();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan laporan');
     } finally {
@@ -205,6 +206,7 @@ export function DailyReportManagement() {
       await request<{ ok: true }>(`/reports/${report.id}`, { method: 'DELETE' });
       if (selectedReport?.id === report.id) setSelectedReport(null);
       await loadReports();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus laporan');
     }

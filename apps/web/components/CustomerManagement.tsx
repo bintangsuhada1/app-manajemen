@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 
 type Customer = {
   id: string;
@@ -159,6 +159,7 @@ export function CustomerManagement() {
       });
       setIsFormOpen(false);
       await loadCustomers();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan pelanggan');
     } finally {
@@ -172,6 +173,7 @@ export function CustomerManagement() {
       setError('');
       await request<{ ok: true }>(`/customers/${customer.id}`, { method: 'DELETE' });
       await loadCustomers();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus pelanggan');
     }

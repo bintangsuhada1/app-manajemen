@@ -7,7 +7,7 @@ import { AlertTriangle, BarChart3, BriefcaseBusiness, Building2, CalendarClock, 
 import type { LucideIcon } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, getActiveCompany, getActiveCompanyId, type Company, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, COMPANIES_CHANGED_EVENT, COMPANY_DATA_CHANGED_EVENT, getActiveCompany, getActiveCompanyId, type Company, withActiveCompanyId } from '@/lib/companies';
 
 type Deadline = {
   id: string;
@@ -177,6 +177,7 @@ export function DashboardAnalytics() {
   const [error, setError] = useState('');
   const [activeCompany, setActiveCompany] = useState<Company>(() => getActiveCompany());
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => getActiveCompanyId());
+  const [refreshKey, setRefreshKey] = useState(0);
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
 
   useEffect(() => {
@@ -194,6 +195,16 @@ export function DashboardAnalytics() {
       window.removeEventListener('storage', syncActiveCompany);
     };
   }, []);
+
+  useEffect(() => {
+    function syncCompanyData(event: Event) {
+      const companyId = (event as CustomEvent<{ companyId?: string | null }>).detail?.companyId;
+      if (!companyId || companyId === activeCompanyId) setRefreshKey((key) => key + 1);
+    }
+
+    window.addEventListener(COMPANY_DATA_CHANGED_EVENT, syncCompanyData);
+    return () => window.removeEventListener(COMPANY_DATA_CHANGED_EVENT, syncCompanyData);
+  }, [activeCompanyId]);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -223,7 +234,7 @@ export function DashboardAnalytics() {
       }
     }
     void loadDashboard();
-  }, [activeCompanyId, router, token]);
+  }, [activeCompanyId, refreshKey, router, token]);
 
   if (error) {
     return (

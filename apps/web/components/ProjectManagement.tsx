@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Archive, CalendarDays, Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 import NumberInput from '@/components/NumberInput';
 import RupiahInput from '@/components/RupiahInput';
 import { parseRupiah } from '@/lib/rupiah';
@@ -261,6 +261,7 @@ export function ProjectManagement() {
       });
       setIsFormOpen(false);
       await loadProjects();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan proyek');
     } finally {
@@ -278,6 +279,7 @@ export function ProjectManagement() {
       if (res.message) alert(res.message);
       if (selectedProject?.id === project.id) setSelectedProject(null);
       await loadProjects();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       const msg = err instanceof Error ? err.message : `Gagal ${actionLabel.toLowerCase()} proyek`;
       setError(msg);

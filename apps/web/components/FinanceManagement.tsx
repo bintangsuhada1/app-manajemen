@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
-import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, withActiveCompanyId } from '@/lib/companies';
+import { ACTIVE_COMPANY_CHANGED_EVENT, getActiveCompanyId, notifyCompanyDataChanged, withActiveCompanyId } from '@/lib/companies';
 import RupiahInput from '@/components/RupiahInput';
 import { formatRupiahDisplay, parseRupiah } from '@/lib/rupiah';
 
@@ -182,6 +182,7 @@ export function FinanceManagement() {
       setIsFormOpen(false);
       await loadTransactions();
       await loadOptions();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan transaksi');
     } finally {
@@ -196,6 +197,7 @@ export function FinanceManagement() {
       await request<{ ok: true }>(`/finance/${transaction.id}`, { method: 'DELETE' });
       await loadTransactions();
       await loadOptions();
+      notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menghapus transaksi');
     }
