@@ -8,12 +8,17 @@
   }
   html {
     scroll-behavior: smooth;
-    font-size: 14px;
+    font-size: 13px;
   }
   body {
     font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-    @apply bg-soft text-[14px] font-normal text-slate-800 antialiased;
-    line-height: 1.5;
+    @apply bg-soft text-[13px] font-normal text-slate-800 antialiased;
+    overflow-x: hidden;
+    line-height: 1.45;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(14, 165, 233, 0.10), transparent 28rem),
+      radial-gradient(circle at 88% 8%, rgba(245, 158, 11, 0.09), transparent 24rem),
+      linear-gradient(180deg, #F4F7FB 0%, #F8FAFC 44%, #F6F8FC 100%);
   }
   ::selection {
     @apply bg-gold/25 text-navy;
@@ -26,38 +31,38 @@
     @apply text-[13px];
   }
   th {
-    @apply sticky top-0 z-10 whitespace-nowrap border-b border-slate-200 bg-slate-50/95 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500 backdrop-blur;
+    @apply sticky top-0 z-10 whitespace-nowrap border-b border-slate-200/70 bg-white/75 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500 backdrop-blur-md;
   }
   td {
     @apply px-3 py-2.5 align-middle text-slate-700;
   }
   tbody tr {
-    @apply border-t border-slate-100 transition-colors odd:bg-white even:bg-slate-50/35 hover:bg-cyan-50/45;
+    @apply border-t border-slate-100/80 transition-colors odd:bg-white/85 even:bg-slate-50/45 hover:bg-cyan-50/55;
   }
 }
 
 .input { 
-  @apply h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100/70 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400; 
+  @apply h-9 w-full rounded-xl border border-slate-200/80 bg-white/80 px-3 py-2 text-[12px] font-medium text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_2px_rgba(15,23,42,0.04)] outline-none backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 hover:bg-white focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-100/70 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400; 
 }
 
 .btn-primary { 
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-[13px] font-semibold text-navy shadow-sm shadow-amber-200/60 transition-all duration-200 hover:bg-amber-400 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
+  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(14,165,233,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:from-cyan-400 hover:to-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
 }
 
 .btn-dark { 
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white shadow-sm shadow-slate-300/40 transition-all duration-200 hover:bg-navy2 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
+  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-[12px] font-semibold text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60; 
 }
 
 .card { 
-  @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/60 transition-all duration-200; 
+  @apply w-full rounded-3xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur transition-all duration-200; 
 }
 
 .glass-card {
-  @apply rounded-2xl border border-white/40 bg-white/85 shadow-sm shadow-slate-200/60 backdrop-blur-md transition-colors duration-200;
+  @apply rounded-[1.25rem] border border-white/55 bg-white/70 shadow-[0_20px_54px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.86)] backdrop-blur-xl transition-all duration-200;
 }
 
 .dashboard-panel {
-  @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/60;
+  @apply rounded-[1.25rem] border border-white/55 bg-white/[0.76] shadow-[0_18px_48px_rgba(15,23,42,0.07)] backdrop-blur-md;
 }
 
 .table-heading {
@@ -65,63 +70,63 @@
 }
 
 .icon-button {
-  @apply inline-grid h-8 w-8 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-cyan-200 hover:bg-cyan-50 hover:text-navy active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-grid h-8 w-8 place-items-center rounded-xl border border-white/70 bg-white/[0.78] text-slate-600 shadow-[0_6px_16px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50/85 hover:text-navy active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .page-section {
-  @apply card mt-5 overflow-hidden;
+  @apply card mt-0 p-6;
 }
 
 .section-header {
-  @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-4 py-3.5 sm:px-5;
+  @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-white/[0.88] px-4 py-3 rounded-2xl shadow-[0_6px_20px_rgba(15,23,42,0.06)] backdrop-blur-md sm:px-5;
 }
 
 .section-title {
-  @apply text-[17px] font-semibold text-slate-950;
+  @apply text-[16px] font-semibold tracking-tight text-slate-950;
 }
 
 .section-description {
-  @apply mt-0.5 text-[13px] font-normal text-slate-500;
+  @apply mt-1 text-[12px] font-medium text-slate-500;
 }
 
 .filter-bar {
-  @apply grid gap-3 border-b border-slate-200/80 bg-slate-50/70 p-4;
+  @apply grid gap-3 border border-slate-200/80 bg-white/[0.82] p-3 rounded-2xl shadow-sm backdrop-blur-md;
 }
 
 .badge {
-  @apply inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.03em] text-slate-600;
+  @apply inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-sm;
 }
 
 .modal-backdrop {
-  @apply fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm;
+  @apply fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/45 px-4 py-6 sm:py-8;
 }
 
 .modal-card {
-  @apply card max-h-[90vh] w-full overflow-y-auto p-5 shadow-2xl shadow-slate-950/15;
+  @apply card w-full max-w-[min(92vw,760px)] rounded-[20px] p-4 shadow-[0_24px_60px_rgba(15,23,42,0.14)];
 }
 
 .btn-secondary {
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-[13px] font-semibold text-slate-600 shadow-sm transition-all duration-200 hover:border-cyan-200 hover:bg-cyan-50 hover:text-navy active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50/80 hover:text-slate-950 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .btn-ghost {
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex h-9 items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-all duration-200 hover:bg-white/[0.65] hover:text-slate-950 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .btn-danger {
-  @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2 text-[13px] font-semibold text-rose-700 shadow-sm transition-all hover:bg-rose-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-rose-200/80 bg-white/75 px-3.5 py-2 text-[12px] font-semibold text-rose-700 shadow-[0_8px_22px_rgba(225,29,72,0.06)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-rose-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .enterprise-table {
-  @apply w-full min-w-[720px] text-left;
+  @apply w-full min-w-[640px] text-left;
 }
 
 .data-card {
-  @apply rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)];
+  @apply rounded-2xl border border-white/65 bg-white/[0.76] p-3 shadow-[0_12px_34px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_18px_44px_rgba(15,23,42,0.09)];
 }
 
 .empty-state {
-  @apply rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-5 text-center text-sm text-slate-500;
+  @apply rounded-2xl border border-dashed border-slate-300/80 bg-white/[0.56] p-5 text-center text-sm text-slate-500 shadow-inner backdrop-blur-md;
 }
 
 .status-dot {
@@ -132,8 +137,54 @@
   @apply tabular-nums tracking-normal;
 }
 
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+@media (max-height: 680px) {
+  .sidebar-shell {
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .sidebar-menu {
+    flex: none;
+    min-height: auto;
+    overflow-y: visible;
+  }
+
+  .sidebar-footer {
+    margin-bottom: 0.25rem;
+  }
+}
+
 .blueprint-panel {
-  @apply relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply relative rounded-[1.35rem] border border-white/55 bg-white/70 shadow-[0_24px_64px_rgba(15,23,42,0.10),inset_0_1px_0_rgba(255,255,255,0.78)] backdrop-blur-xl;
 }
 
 .blueprint-panel::before {

@@ -207,6 +207,12 @@ export function ProjectManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingProject(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(project: Project) {
     setEditingProject(project);
     setForm({
@@ -259,7 +265,7 @@ export function ProjectManagement() {
         method: editingProject ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadProjects();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -294,93 +300,26 @@ export function ProjectManagement() {
           <h2 className="section-title">Manajemen Proyek</h2>
           <p className="section-description">Filter status, progress, nilai kontrak, deadline, dan PIC.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> Proyek Baru
-        </button>
-      </div>
-
-      <div className="filter-bar md:grid-cols-[1fr_210px_auto]">
-        <input
-          className="input"
-          placeholder="Cari nama, kode, atau lokasi proyek"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <select className="input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="">Semua status</option>
-          {options.statuses.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
-        </select>
-        <button className="btn-dark" onClick={() => void loadProjects(query, statusFilter)} disabled={!token}>Terapkan</button>
-      </div>
-
-      {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar data proyek dari backend dapat dimuat.</p>}
-      {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 text-slate-500">
-            <tr>
-              <th>Proyek</th>
-              <th>Lokasi</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Nilai Kontrak</th>
-              <th>Deadline</th>
-              <th>PIC</th>
-              <th className="pr-4 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <tr><td className="p-4 text-slate-500" colSpan={8}>Memuat proyek...</td></tr>}
-            {!loading && projects.length === 0 && <tr><td className="p-4 text-slate-500" colSpan={8}>Belum ada proyek.</td></tr>}
-            {projects.map((project) => {
-              const pic = getPic(project);
-              return (
-                <tr key={project.id} className="align-top">
-                  <td>
-                    <p className="font-bold text-navy">{project.name}</p>
-                    <p className="text-xs text-slate-500">{project.code || 'Tanpa kode'}</p>
-                  </td>
-                  <td>{project.location || '-'}</td>
-                  <td><span className="badge border-blue-100 bg-blue-50 text-blue-700">{statusLabel(project.status)}</span></td>
-                  <td>{project.progress}%</td>
-                  <td>{formatCurrency(project.contractValue)}</td>
-                  <td>{formatDate(project.endDate)}</td>
-                  <td>{pic?.name || '-'}</td>
-                  <td className="pr-4">
-                    <div className="flex justify-end gap-2">
-                      <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(project.id)}><Eye size={16} /></button>
-                      <button className="icon-button" title="Edit proyek" onClick={() => openEditForm(project)}><Pencil size={16} /></button>
-                      {(userRole === 'SUPER_ADMIN' || userRole === 'DIREKTUR') && (
-                        <button
-                          className={`icon-button ${isSafeToDelete(project) ? 'text-red-600 hover:bg-red-50' : 'text-amber-600 hover:bg-amber-50'}`}
-                          title={isSafeToDelete(project) ? 'Hapus proyek' : 'Batalkan proyek (Arsipkan)'}
-                          onClick={() => void deleteProject(project)}
-                        >
-                          {isSafeToDelete(project) ? <Trash2 size={16} /> : <Archive size={16} />}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> Proyek Baru
+          </button>
+        )}
       </div>
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-3xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingProject ? 'Edit Proyek' : 'Tambah Proyek'}</h3>
                 <p className="section-description">Data tersimpan langsung ke backend proyek.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form proyek"><X size={16} /></button>
             </div>
+            {error && <p className="rounded-2xl border border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" placeholder="Kode proyek" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
               <input className="input" required placeholder="Nama proyek" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
               <input className="input" placeholder="Lokasi" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
@@ -402,19 +341,93 @@ export function ProjectManagement() {
                 Deadline
                 <input className="input" type="date" value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} />
               </label>
-              <select className="input md:col-span-2" value={form.picUserId} onChange={(event) => setForm({ ...form, picUserId: event.target.value })}>
+              <select className="input lg:col-span-2" value={form.picUserId} onChange={(event) => setForm({ ...form, picUserId: event.target.value })}>
                 <option value="">Pilih PIC</option>
                 {options.users.map((user) => <option key={user.id} value={user.id}>{user.name} - {user.role}</option>)}
               </select>
-              <textarea className="input md:col-span-2" rows={4} placeholder="Deskripsi proyek" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={5} placeholder="Deskripsi proyek" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Proyek'}</button>
             </div>
           </form>
-        </div>
+        </section>
+      )}
+
+      {!isFormOpen && (
+        <>
+          <div className="filter-bar md:grid-cols-[1fr_210px_auto]">
+            <input
+              className="input"
+              placeholder="Cari nama, kode, atau lokasi proyek"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <select className="input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="">Semua status</option>
+              {options.statuses.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
+            </select>
+            <button className="btn-dark" onClick={() => void loadProjects(query, statusFilter)} disabled={!token}>Terapkan</button>
+          </div>
+
+          {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar data proyek dari backend dapat dimuat.</p>}
+          {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  <th>Proyek</th>
+                  <th>Lokasi</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Nilai Kontrak</th>
+                  <th>Deadline</th>
+                  <th>PIC</th>
+                  <th className="pr-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && <tr><td className="p-4 text-slate-500" colSpan={8}>Memuat proyek...</td></tr>}
+                {!loading && projects.length === 0 && <tr><td className="p-4 text-slate-500" colSpan={8}>Belum ada proyek.</td></tr>}
+                {projects.map((project) => {
+                  const pic = getPic(project);
+                  return (
+                    <tr key={project.id} className="align-top">
+                      <td>
+                        <p className="font-bold text-navy">{project.name}</p>
+                        <p className="text-xs text-slate-500">{project.code || 'Tanpa kode'}</p>
+                      </td>
+                      <td>{project.location || '-'}</td>
+                      <td><span className="badge border-blue-100 bg-blue-50 text-blue-700">{statusLabel(project.status)}</span></td>
+                      <td>{project.progress}%</td>
+                      <td>{formatCurrency(project.contractValue)}</td>
+                      <td>{formatDate(project.endDate)}</td>
+                      <td>{pic?.name || '-'}</td>
+                      <td className="pr-4">
+                        <div className="flex justify-end gap-2">
+                          <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(project.id)}><Eye size={16} /></button>
+                          <button className="icon-button" title="Edit proyek" onClick={() => openEditForm(project)}><Pencil size={16} /></button>
+                          {(userRole === 'SUPER_ADMIN' || userRole === 'DIREKTUR') && (
+                            <button
+                              className={`icon-button ${isSafeToDelete(project) ? 'text-red-600 hover:bg-red-50' : 'text-amber-600 hover:bg-amber-50'}`}
+                              title={isSafeToDelete(project) ? 'Hapus proyek' : 'Batalkan proyek (Arsipkan)'}
+                              onClick={() => void deleteProject(project)}
+                            >
+                              {isSafeToDelete(project) ? <Trash2 size={16} /> : <Archive size={16} />}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {selectedProject && (

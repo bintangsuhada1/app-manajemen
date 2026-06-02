@@ -136,6 +136,7 @@ export function UserManagement() {
     setEditingUser(null);
     setForm(emptyForm);
     setIsFormOpen(true);
+    setIsPasswordOpen(false);
   }
 
   function openEditForm(user: User) {
@@ -148,12 +149,26 @@ export function UserManagement() {
       isActive: user.isActive
     });
     setIsFormOpen(true);
+    setIsPasswordOpen(false);
   }
 
   function openPasswordForm(user: User) {
     setEditingUser(user);
     setNewPassword('');
     setIsPasswordOpen(true);
+    setIsFormOpen(false);
+  }
+
+  function closeUserForm() {
+    setIsFormOpen(false);
+    setEditingUser(null);
+    setForm(emptyForm);
+  }
+
+  function closePasswordForm() {
+    setIsPasswordOpen(false);
+    setEditingUser(null);
+    setNewPassword('');
   }
 
   async function submitForm(event: FormEvent<HTMLFormElement>) {
@@ -227,15 +242,17 @@ export function UserManagement() {
           <h2 className="section-title">Manajemen Akun Pengguna</h2>
           <p className="section-description">Kelola kredensial, role internal perusahaan, dan hak akses aplikasi.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> User Baru
-        </button>
+        {!isFormOpen && !isPasswordOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> User Baru
+          </button>
+        )}
       </div>
 
       {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
       {success && <p className="border-b border-emerald-100 bg-emerald-50 p-3.5 text-sm text-emerald-700">{success}</p>}
 
-      <div className="overflow-x-auto">
+      {!isFormOpen && !isPasswordOpen && <div className="overflow-x-auto">
         <table className="enterprise-table">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
@@ -293,20 +310,20 @@ export function UserManagement() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingUser ? 'Edit Detail User' : 'Tambah User Baru'}</h3>
                 <p className="section-description">Isi data akun internal perusahaan dengan benar.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeUserForm} aria-label="Tutup form user"><X size={16} /></button>
             </div>
 
-            <div className="mt-4 grid gap-3">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <label className="block text-[13px] font-medium text-slate-700">
                 Nama Lengkap
                 <input 
@@ -330,7 +347,7 @@ export function UserManagement() {
                 />
               </label>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 lg:col-span-2 lg:grid-cols-2">
                 <label className="block text-[13px] font-medium text-slate-700">
                   Peran (Role)
                   <select 
@@ -354,7 +371,7 @@ export function UserManagement() {
               </div>
 
               {!editingUser && (
-                <label className="block text-[13px] font-medium text-slate-700">
+                <label className="block text-[13px] font-medium text-slate-700 lg:col-span-2">
                   Kata Sandi Awal
                   <input 
                     className="input mt-1" 
@@ -368,7 +385,7 @@ export function UserManagement() {
               )}
 
               {editingUser && (
-                <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-700 lg:col-span-2">
                   <input 
                     type="checkbox" 
                     className="h-4 w-4 rounded border-slate-300 text-gold focus:ring-gold"
@@ -380,26 +397,26 @@ export function UserManagement() {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeUserForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan User'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {isPasswordOpen && editingUser && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-md" onSubmit={submitPasswordReset}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitPasswordReset}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">Reset Password User</h3>
                 <p className="section-description">Ubah password untuk user: <span className="font-semibold text-navy">{editingUser.name}</span></p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsPasswordOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closePasswordForm} aria-label="Tutup form password"><X size={16} /></button>
             </div>
 
-            <div className="mt-5">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <label className="block text-sm font-semibold text-slate-700">
                 Password Baru
                 <input 
@@ -413,12 +430,12 @@ export function UserManagement() {
               </label>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsPasswordOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closePasswordForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Mereset...' : 'Reset Password'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
     </section>
   );

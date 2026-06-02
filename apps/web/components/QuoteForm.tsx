@@ -103,7 +103,7 @@ export function QuoteForm() {
           <option value="Maintenance kelistrikan">Maintenance kelistrikan</option>
         </select>
         <input 
-          className="input md:col-span-2" 
+          className="input h-auto min-h-[120px] md:col-span-2" 
           type="email" 
           placeholder="Alamat Email (opsional)" 
           value={email}

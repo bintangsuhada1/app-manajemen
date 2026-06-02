@@ -184,6 +184,12 @@ export function InvoiceManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingInvoice(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(invoice: Invoice) {
     setEditingInvoice(invoice);
     setForm({
@@ -255,7 +261,7 @@ export function InvoiceManagement() {
         method: editingInvoice ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadInvoices();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -285,27 +291,35 @@ export function InvoiceManagement() {
           <h2 className="section-title">Invoice</h2>
           <p className="section-description">Due date, status, dan pembayaran.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> Invoice Baru
-        </button>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> Invoice Baru
+          </button>
+        )}
       </div>
 
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data invoice dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 grid gap-3">
-        {loading && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Memuat invoice...</div>}
-        {!loading && invoices.length === 0 && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Belum ada invoice.</div>}
+      {!isFormOpen && <div className="mt-4 grid gap-3">
+        {loading && <div className="empty-state">Memuat invoice...</div>}
+        {!loading && invoices.length === 0 && <div className="empty-state">Belum ada invoice.</div>}
         {invoices.map((invoice) => (
-          <div key={invoice.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+          <div key={invoice.id} className="data-card">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-bold text-navy">{invoice.number} - {invoice.title}</p>
-                <p className="text-[13px] text-slate-500">{invoice.customer?.name || '-'}{invoice.project ? ` | ${invoice.project.name}` : ''}</p>
-                <p className="mt-1 text-xs font-semibold text-cyan-700">{statusLabel(invoice.status)} | {paymentStatus(invoice)} | {formatCurrency(invoice.total)}</p>
-                <p className="mt-1 text-xs text-slate-500">Jatuh tempo: {formatDate(invoice.dueDate)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-semibold leading-5 text-slate-950">{invoice.number} - {invoice.title}</p>
+                <p className="mt-1 text-[13px] text-slate-500">{invoice.customer?.name || '-'}{invoice.project ? ` | ${invoice.project.name}` : ''}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="badge border-cyan-100 bg-cyan-50 text-cyan-700">{statusLabel(invoice.status)}</span>
+                  <span className="badge border-slate-200 bg-slate-50 text-slate-600">{paymentStatus(invoice)}</span>
+                </div>
+                <div className="mt-2 grid gap-1 text-xs text-slate-500 sm:grid-cols-2">
+                  <p>Jatuh tempo: <span className="font-medium text-slate-700">{formatDate(invoice.dueDate)}</span></p>
+                  <p className="money-value font-semibold text-slate-950 sm:text-right">{formatCurrency(invoice.total)}</p>
+                </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
                 <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(invoice.id)}><Eye size={16} /></button>
                 <button className="icon-button" title="Download PDF" onClick={() => void downloadProtectedFile(withActiveCompanyId(`/invoices/${invoice.id}/pdf`, activeCompanyId), `invoice-${invoice.number}.pdf`, token, () => { window.localStorage.removeItem('token'); window.localStorage.removeItem('user'); router.replace('/login'); }, () => router.replace('/forbidden'))}><Download size={16} /></button>
                 <button className="icon-button" title="Edit invoice" onClick={() => openEditForm(invoice)}><Pencil size={16} /></button>
@@ -314,20 +328,20 @@ export function InvoiceManagement() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-4xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingInvoice ? 'Edit Invoice' : 'Tambah Invoice'}</h3>
                 <p className="section-description">Pembayaran ditampilkan dari total dan nilai yang sudah dibayar.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form invoice"><X size={16} /></button>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" required placeholder="Nomor invoice" value={form.number} onChange={(event) => setForm({ ...form, number: event.target.value })} />
               <input className="input" required placeholder="Judul invoice" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
@@ -344,42 +358,42 @@ export function InvoiceManagement() {
               </select>
             </div>
 
-            <div className="mt-5">
+            <div>
               <div className="flex items-center justify-between">
-                <p className="font-bold text-navy">Item Invoice</p>
+                <p className="font-semibold text-slate-950">Item Invoice</p>
                 <button type="button" className="btn-secondary" onClick={addItem}>+ Item</button>
               </div>
               <div className="mt-3 grid gap-3">
                 {form.items.map((item, index) => (
-                  <div key={index} className="grid gap-3 rounded-xl border p-3 md:grid-cols-[1fr_90px_100px_140px_120px_auto]">
+                  <div key={index} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 lg:grid-cols-[minmax(220px,1fr)_90px_100px_160px_140px_auto]">
                     <input className="input" required placeholder="Deskripsi item" value={item.description} onChange={(event) => updateItem(index, { description: event.target.value })} />
                     <input className="input" required placeholder="Satuan" value={item.unit} onChange={(event) => updateItem(index, { unit: event.target.value })} />
                     <NumberInput className="input" required value={item.qty} onChange={(val) => updateItem(index, { qty: Number(val || 0) })} allowDecimal />
                     <RupiahInput className="input" required placeholder="Harga satuan" value={item.unitPrice} onChange={(val) => updateItem(index, { unitPrice: val })} />
-                    <div className="grid content-center text-sm font-semibold text-navy">{formatCurrency(item.qty * parseRupiah(item.unitPrice))}</div>
+                    <div className="money-value grid content-center text-sm font-semibold text-slate-950">{formatCurrency(item.qty * parseRupiah(item.unitPrice))}</div>
                     <button type="button" className="icon-button text-red-600 hover:bg-red-50" onClick={() => removeItem(index)} disabled={form.items.length === 1}><Trash2 size={16} /></button>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <RupiahInput className="input" placeholder="Pajak" value={form.tax} onChange={(val) => setForm({ ...form, tax: val })} />
               <RupiahInput className="input" placeholder="Sudah dibayar" value={form.paidAmount} onChange={(val) => setForm({ ...form, paidAmount: val })} />
             </div>
 
-            <div className="mt-5 grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
+            <div className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
               <div className="flex justify-between"><span>Pajak</span><strong>{formatCurrency(form.tax)}</strong></div>
-              <div className="flex justify-between border-t pt-2 text-base text-navy"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
+              <div className="flex justify-between border-t pt-2 text-base text-slate-950"><span>Total</span><strong className="money-value">{formatCurrency(total)}</strong></div>
             </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Invoice'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {selectedInvoice && (

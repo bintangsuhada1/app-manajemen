@@ -65,6 +65,19 @@ export function DailyReportManagement() {
   const [error, setError] = useState('');
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => getActiveCompanyId());
 
+  function formatStatus(status: string) {
+    switch (status.toUpperCase()) {
+      case 'APPROVED':
+        return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+      case 'REJECTED':
+        return 'border-rose-200 bg-rose-50 text-rose-700';
+      case 'SUBMITTED':
+        return 'border-cyan-100 bg-cyan-50 text-cyan-700';
+      default:
+        return 'border-slate-200 bg-slate-100 text-slate-700';
+    }
+  }
+
   const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -151,6 +164,12 @@ export function DailyReportManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingReport(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(report: DailyReport) {
     setEditingReport(report);
     setForm({
@@ -189,7 +208,7 @@ export function DailyReportManagement() {
         method: editingReport ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadReports();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -219,12 +238,14 @@ export function DailyReportManagement() {
           <h2 className="section-title">Laporan Harian Teknisi</h2>
           <p className="section-description">Pekerjaan, kendala, progres, dan dokumentasi.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> Laporan Baru
-        </button>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> Laporan Baru
+          </button>
+        )}
       </div>
 
-      <div className="filter-bar md:grid-cols-2 lg:grid-cols-4">
+      {!isFormOpen && <div className="filter-bar sm:grid-cols-2 xl:grid-cols-4">
         <select className="input" value={filters.projectId} onChange={(event) => setFilters({ ...filters, projectId: event.target.value })}>
           <option value="">Semua proyek</option>
           {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -235,78 +256,92 @@ export function DailyReportManagement() {
         </select>
         <input className="input" type="date" value={filters.from} onChange={(event) => setFilters({ ...filters, from: event.target.value })} />
         <input className="input" type="date" value={filters.to} onChange={(event) => setFilters({ ...filters, to: event.target.value })} />
-        <button className="btn-dark lg:col-span-4" onClick={() => void loadReports()} disabled={!token}>Terapkan Filter</button>
-      </div>
+        <button className="btn-dark sm:col-span-2 xl:col-span-4" onClick={() => void loadReports()} disabled={!token}>Terapkan Filter</button>
+      </div>}
 
       {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar laporan dapat dimuat.</p>}
       {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
+      {!isFormOpen && <div className="overflow-x-auto rounded-[1.25rem] border border-slate-200/70 bg-white/[0.88] shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+        <table className="enterprise-table min-w-full border-separate border-spacing-0">
           <thead className="bg-slate-50 text-slate-500">
-            <tr><th>Tanggal</th><th>Teknisi</th><th>Proyek</th><th>Pekerjaan</th><th>Dokumentasi</th><th>Status</th><th className="pr-4 text-right">Aksi</th></tr>
+            <tr>
+              <th className="px-4 py-3">Tanggal</th>
+              <th className="px-4 py-3">Teknisi</th>
+              <th className="px-4 py-3">Proyek</th>
+              <th className="px-4 py-3">Pekerjaan</th>
+              <th className="px-4 py-3">Dokumentasi</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3 text-right">Aksi</th>
+            </tr>
           </thead>
           <tbody>
             {loading && <tr><td className="p-4 text-slate-500" colSpan={7}>Memuat laporan...</td></tr>}
             {!loading && reports.length === 0 && <tr><td className="p-4 text-slate-500" colSpan={7}>Belum ada laporan.</td></tr>}
             {reports.map((report) => (
-              <tr key={report.id} className="align-top">
-                <td>{formatDate(report.date)}</td>
-                <td className="font-semibold text-navy">{report.technician.name}</td>
-                <td>{report.project.name}</td>
-                <td>{report.workDescription}</td>
-                <td>{report.photos.length} foto</td>
-                <td><span className="badge border-cyan-100 bg-cyan-50 text-cyan-700">{report.status}</span></td>
-                <td className="pr-4">
+              <tr key={report.id} className="align-top border-t border-slate-200/80 bg-white transition-colors duration-200 hover:bg-slate-50/80">
+                <td className="px-4 py-3 font-semibold text-slate-900">{formatDate(report.date)}</td>
+                <td className="px-4 py-3 text-slate-700">{report.technician.name}</td>
+                <td className="px-4 py-3 text-slate-700">{report.project.name}</td>
+                <td className="px-4 py-3 text-slate-700">{report.workDescription}</td>
+                <td className="px-4 py-3 text-slate-700">{report.photos.length} foto</td>
+                <td className="px-4 py-3">
+                  <span className={`badge ${formatStatus(report.status)}`}>{report.status}</span>
+                </td>
+                <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-2">
                     <button className="icon-button" title="Lihat detail" onClick={() => void openDetail(report.id)}><Eye size={16} /></button>
                     <button className="icon-button" title="Edit laporan" onClick={() => openEditForm(report)}><Pencil size={16} /></button>
-                    <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus laporan" onClick={() => void deleteReport(report)}><Trash2 size={16} /></button>
+                    <button className="icon-button text-rose-600 hover:bg-rose-50" title="Hapus laporan" onClick={() => void deleteReport(report)}><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-3xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="section-title">{editingReport ? 'Edit Laporan' : 'Tambah Laporan'}</h3>
                 <p className="section-description">Data laporan tersimpan langsung ke backend.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form laporan"><X size={16} /></button>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <input className="input" type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
-              <input className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} />
-              <select className="input" required value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <input className="input h-10" type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
+              <select className="input h-10" required value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
                 <option value="">Pilih proyek</option>
                 {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>
-              <select className="input" required value={form.technicianId} onChange={(event) => setForm({ ...form, technicianId: event.target.value })}>
+              <select className="input h-10" required value={form.technicianId} onChange={(event) => setForm({ ...form, technicianId: event.target.value })}>
                 <option value="">Pilih teknisi</option>
                 {options.technicians.map((technician) => <option key={technician.id} value={technician.id}>{technician.name} - {technician.role}</option>)}
               </select>
-              <textarea className="input md:col-span-2" required rows={4} placeholder="Pekerjaan dilakukan" value={form.workDescription} onChange={(event) => setForm({ ...form, workDescription: event.target.value })} />
-              <textarea className="input md:col-span-2" rows={3} placeholder="Kendala" value={form.obstacle} onChange={(event) => setForm({ ...form, obstacle: event.target.value })} />
-              <textarea className="input md:col-span-2" rows={3} placeholder="Progress / catatan" value={form.progressNote} onChange={(event) => setForm({ ...form, progressNote: event.target.value })} />
+              <select className="input h-10" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
+                <option value="SUBMITTED">SUBMITTED</option>
+                <option value="APPROVED">APPROVED</option>
+                <option value="REJECTED">REJECTED</option>
+              </select>
+              <textarea className="input h-auto min-h-[140px] resize-none lg:col-span-2" required rows={5} placeholder="Pekerjaan dilakukan" value={form.workDescription} onChange={(event) => setForm({ ...form, workDescription: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] resize-none lg:col-span-2" rows={4} placeholder="Kendala" value={form.obstacle} onChange={(event) => setForm({ ...form, obstacle: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] resize-none lg:col-span-2" rows={4} placeholder="Progress / catatan" value={form.progressNote} onChange={(event) => setForm({ ...form, progressNote: event.target.value })} />
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Laporan'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {selectedReport && (
-        <div className="modal-backdrop z-40">
-          <div className="modal-card max-w-2xl">
-            <div className="flex items-start justify-between gap-4">
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-gold">{formatDate(selectedReport.date)}</p>
                 <h3 className="text-xl font-semibold text-slate-950">{selectedReport.project.name}</h3>
@@ -314,7 +349,7 @@ export function DailyReportManagement() {
               <button className="icon-button" onClick={() => setSelectedReport(null)}><X size={16} /></button>
             </div>
             <div className="mt-4 grid gap-3">
-              <div><p className="text-xs text-slate-500">Teknisi</p><p className="font-semibold text-navy">{selectedReport.technician.name}</p></div>
+              <div><p className="text-xs text-slate-500">Teknisi</p><p className="font-semibold text-slate-900">{selectedReport.technician.name}</p></div>
               <div><p className="text-xs text-slate-500">Pekerjaan dilakukan</p><p className="text-slate-700">{selectedReport.workDescription}</p></div>
               <div><p className="text-xs text-slate-500">Kendala</p><p className="text-slate-700">{selectedReport.obstacle || '-'}</p></div>
               <div><p className="text-xs text-slate-500">Progress / catatan</p><p className="text-slate-700">{selectedReport.progressNote || '-'}</p></div>

@@ -123,6 +123,12 @@ export function CustomerManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingCustomer(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(customer: Customer) {
     setEditingCustomer(customer);
     setForm({
@@ -157,7 +163,7 @@ export function CustomerManagement() {
         method: editingCustomer ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadCustomers();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -183,52 +189,28 @@ export function CustomerManagement() {
     <section id="crm" className="card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="section-title">CRM Pelanggan</h2>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> Pelanggan Baru
-        </button>
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-        <input className="input" placeholder="Cari pelanggan/prospek" value={query} onChange={(event) => setQuery(event.target.value)} />
-        <button className="btn-dark" onClick={() => void loadCustomers(query)} disabled={!token}>Cari</button>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> Pelanggan Baru
+          </button>
+        )}
       </div>
 
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data pelanggan dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 grid gap-3">
-        {loading && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Memuat pelanggan...</div>}
-        {!loading && customers.length === 0 && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Belum ada pelanggan.</div>}
-        {customers.map((customer) => (
-          <div key={customer.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-bold text-navy">{customer.name}</p>
-                <p className="text-[13px] text-slate-500">{customer.picName || '-'}{customer.phone ? ` | ${customer.phone}` : ''}</p>
-                <p className="mt-1 text-xs font-semibold text-cyan-700">{statusLabel(customer.status)}{customer.segment ? ` | ${customer.segment}` : ''}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="icon-button" title="Edit pelanggan" onClick={() => openEditForm(customer)}><Pencil size={16} /></button>
-                <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus pelanggan" onClick={() => void deleteCustomer(customer)}><Trash2 size={16} /></button>
-              </div>
-            </div>
-            {customer.notes && <p className="mt-2 text-sm text-slate-600">{customer.notes}</p>}
-          </div>
-        ))}
-      </div>
-
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-2xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingCustomer ? 'Edit Pelanggan' : 'Tambah Pelanggan'}</h3>
                 <p className="section-description">Data tersimpan langsung ke backend pelanggan.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form pelanggan"><X size={16} /></button>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" required placeholder="Nama pelanggan" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
               <input className="input" placeholder="Nama PIC" value={form.picName} onChange={(event) => setForm({ ...form, picName: event.target.value })} />
               <input className="input" placeholder="Nomor telepon" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
@@ -237,16 +219,46 @@ export function CustomerManagement() {
               <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
                 {statuses.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
               </select>
-              <textarea className="input md:col-span-2" rows={3} placeholder="Alamat" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
-              <textarea className="input md:col-span-2" rows={3} placeholder="Catatan" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={4} placeholder="Alamat" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={4} placeholder="Catatan" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Pelanggan'}</button>
             </div>
           </form>
-        </div>
+        </section>
+      )}
+
+      {!isFormOpen && (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+            <input className="input" placeholder="Cari pelanggan/prospek" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <button className="btn-dark" onClick={() => void loadCustomers(query)} disabled={!token}>Cari</button>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {loading && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Memuat pelanggan...</div>}
+            {!loading && customers.length === 0 && <div className="rounded-2xl border p-3.5 text-sm text-slate-500">Belum ada pelanggan.</div>}
+            {customers.map((customer) => (
+              <div key={customer.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-navy">{customer.name}</p>
+                    <p className="text-[13px] text-slate-500">{customer.picName || '-'}{customer.phone ? ` | ${customer.phone}` : ''}</p>
+                    <p className="mt-1 text-xs font-semibold text-cyan-700">{statusLabel(customer.status)}{customer.segment ? ` | ${customer.segment}` : ''}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="icon-button" title="Edit pelanggan" onClick={() => openEditForm(customer)}><Pencil size={16} /></button>
+                    <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus pelanggan" onClick={() => void deleteCustomer(customer)}><Trash2 size={16} /></button>
+                  </div>
+                </div>
+                {customer.notes && <p className="mt-2 text-sm text-slate-600">{customer.notes}</p>}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </section>
   );

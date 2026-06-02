@@ -150,6 +150,12 @@ export function FinanceManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingTransaction(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(transaction: Transaction) {
     setEditingTransaction(transaction);
     setForm({
@@ -179,7 +185,7 @@ export function FinanceManagement() {
         method: editingTransaction ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadTransactions();
       await loadOptions();
       notifyCompanyDataChanged(activeCompanyId);
@@ -203,6 +209,9 @@ export function FinanceManagement() {
     }
   }
 
+  const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const visibleTransactions = sortedTransactions;
+
   return (
     <section id="keuangan" className="card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -210,19 +219,30 @@ export function FinanceManagement() {
           <h2 className="section-title">Keuangan</h2>
           <p className="section-description">Kas masuk, kas keluar, dan saldo.</p>
         </div>
-        <div className="flex gap-2">
-          <button className="btn-primary" onClick={() => openCreateForm('INCOME')} disabled={!token}><Plus size={16} className="inline" /> Kas Masuk</button>
-          <button className="btn-dark" onClick={() => openCreateForm('EXPENSE')} disabled={!token}><Plus size={16} className="inline" /> Kas Keluar</button>
+        {!isFormOpen && (
+          <div className="flex gap-2">
+            <button className="btn-primary" onClick={() => openCreateForm('INCOME')} disabled={!token}><Plus size={16} className="inline" /> Kas Masuk</button>
+            <button className="btn-dark" onClick={() => openCreateForm('EXPENSE')} disabled={!token}><Plus size={16} className="inline" /> Kas Keluar</button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-emerald-700">Pemasukan</p>
+          <p className="money-value mt-1.5 break-words text-lg font-semibold text-emerald-800">{formatCurrency(summary.income)}</p>
+        </div>
+        <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-rose-700">Pengeluaran</p>
+          <p className="money-value mt-1.5 break-words text-lg font-semibold text-rose-800">{formatCurrency(summary.expense)}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-600">Saldo</p>
+          <p className="money-value mt-1.5 break-words text-lg font-semibold text-slate-950">{formatCurrency(summary.balance)}</p>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-sm md:grid-cols-3">
-        <div><p className="text-slate-500">Pemasukan</p><p className="font-bold text-navy">{formatCurrency(summary.income)}</p></div>
-        <div><p className="text-slate-500">Pengeluaran</p><p className="font-bold text-navy">{formatCurrency(summary.expense)}</p></div>
-        <div><p className="text-slate-500">Saldo</p><p className="font-bold text-navy">{formatCurrency(summary.balance)}</p></div>
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      {!isFormOpen && <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_220px_180px_auto]">
         <input className="input" type="date" value={filters.from} onChange={(event) => setFilters({ ...filters, from: event.target.value })} />
         <input className="input" type="date" value={filters.to} onChange={(event) => setFilters({ ...filters, to: event.target.value })} />
         <select className="input" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
@@ -234,49 +254,61 @@ export function FinanceManagement() {
           <option value="INCOME">INCOME</option>
           <option value="EXPENSE">EXPENSE</option>
         </select>
-      </div>
-      <button className="btn-dark mt-3 w-full" onClick={() => void loadTransactions()} disabled={!token}>Terapkan Filter</button>
+        <button className="btn-dark w-full" onClick={() => void loadTransactions()} disabled={!token}>Terapkan</button>
+      </div>}
 
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data transaksi dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-        <div>
-          <div className="grid gap-0 divide-y divide-slate-200">
+      {!isFormOpen && <div className="mt-4 rounded-2xl border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-slate-500">Daftar Transaksi</p>
+        </div>
+        <div className="grid gap-0 divide-y divide-slate-100">
             {loading && <div className="p-4 text-sm text-slate-500">Memuat transaksi...</div>}
-            {!loading && transactions.length === 0 && <div className="p-4 text-sm text-slate-500">Belum ada transaksi.</div>}
-            {transactions.map((transaction) => (
-              <div key={transaction.id} className="p-3.5 hover:bg-slate-50">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-navy">{transaction.category}</p>
-                    <p className="text-xs text-slate-500">{transaction.type} | {formatDate(transaction.date)}</p>
-                    <p className="text-xs text-slate-500">{transaction.project?.name || 'Tanpa proyek'}</p>
-                    {transaction.description && <p className="mt-1 text-xs text-slate-600">{transaction.description}</p>}
-                    <p className={`money-value mt-1 text-sm font-semibold ${transaction.type === 'INCOME' ? 'text-emerald-700' : 'text-rose-700'}`}>{formatCurrency(transaction.amount)}</p>
+            {!loading && transactions.length === 0 && <div className="empty-state m-4">Belum ada transaksi.</div>}
+            {visibleTransactions.map((transaction) => (
+              <div key={transaction.id} className="p-4 transition-colors hover:bg-slate-50">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-start">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-950">{transaction.category}</p>
+                    <p className="mt-1 text-xs text-slate-500">{formatDate(transaction.date)} | {transaction.project?.name || 'Tanpa proyek'}</p>
+                    {transaction.description && <p className="mt-1 text-xs leading-5 text-slate-600">{transaction.description}</p>}
                   </div>
-                  <div className="flex shrink-0 gap-2">
+                  <div className="md:text-right">
+                    <span className={`badge ${transaction.type === 'INCOME' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
+                      {transaction.type === 'INCOME' ? 'Kas Masuk' : 'Kas Keluar'}
+                    </span>
+                    <p className={`money-value mt-1.5 text-sm font-semibold ${transaction.type === 'INCOME' ? 'text-emerald-700' : 'text-rose-700'}`}>{formatCurrency(transaction.amount)}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-2 md:justify-end">
                     <button className="icon-button" title="Edit transaksi" onClick={() => openEditForm(transaction)}><Pencil size={16} /></button>
                     <button className="icon-button text-red-600 hover:bg-red-50" title="Hapus transaksi" onClick={() => void deleteTransaction(transaction)}><Trash2 size={16} /></button>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
         </div>
-      </div>
+        {!loading && transactions.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-medium text-slate-500">
+              Menampilkan semua {transactions.length} transaksi
+            </p>
+          </div>
+        )}
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-2xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi'}</h3>
                 <p className="section-description">Catatan kas tersimpan langsung ke backend.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form transaksi"><X size={16} /></button>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <select className="input" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as 'INCOME' | 'EXPENSE' })}>
                 <option value="INCOME">INCOME</option>
                 <option value="EXPENSE">EXPENSE</option>
@@ -284,18 +316,18 @@ export function FinanceManagement() {
               <input className="input" type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} />
               <input className="input" required placeholder="Kategori" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
               <RupiahInput className="input" required placeholder="Nominal" value={form.amount} onChange={(val) => setForm({ ...form, amount: val })} />
-              <select className="input md:col-span-2" value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
+              <select className="input lg:col-span-2" value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
                 <option value="">Tanpa proyek</option>
                 {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>
-              <textarea className="input md:col-span-2" rows={3} placeholder="Deskripsi" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={4} placeholder="Deskripsi" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Transaksi'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
     </section>
   );

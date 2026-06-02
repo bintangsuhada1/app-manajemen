@@ -109,6 +109,11 @@ export function DocumentManagement() {
     void loadOptions();
   }, []);
 
+  function closeUploadForm() {
+    setIsFormOpen(false);
+    setForm(emptyForm);
+  }
+
   async function submitUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form.file) return;
@@ -122,8 +127,7 @@ export function DocumentManagement() {
 
     try {
       await request<DocumentItem>('/documents/upload', { method: 'POST', body });
-      setIsFormOpen(false);
-      setForm(emptyForm);
+      closeUploadForm();
       await loadDocuments();
       await loadOptions();
     } catch (err) {
@@ -187,12 +191,14 @@ export function DocumentManagement() {
           <h2 className="section-title">Dokumen & Dokumentasi Proyek</h2>
           <p className="section-description">Dokumen perusahaan, dokumen proyek, dan foto proyek.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={() => setIsFormOpen(true)} disabled={!token}>
-          <Plus size={16} /> Upload Dokumen
-        </button>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={() => setIsFormOpen(true)} disabled={!token}>
+            <Plus size={16} /> Upload Dokumen
+          </button>
+        )}
       </div>
 
-      <div className="filter-bar md:grid-cols-3">
+      {!isFormOpen && <div className="filter-bar md:grid-cols-3">
         <select className="input" value={filters.projectId} onChange={(event) => setFilters({ ...filters, projectId: event.target.value })}>
           <option value="">Semua proyek</option>
           {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -206,12 +212,12 @@ export function DocumentManagement() {
           {options.mimeTypes.map((mimeType) => <option key={mimeType}>{mimeType}</option>)}
         </select>
         <button className="btn-dark md:col-span-3" onClick={() => void loadDocuments()} disabled={!token}>Terapkan Filter</button>
-      </div>
+      </div>}
 
       {!token && <p className="p-4 text-sm text-orange-700">Login dulu agar dokumen dapat dimuat.</p>}
       {error && <p className="border-b border-red-100 bg-red-50 p-3.5 text-sm text-red-700">{error}</p>}
 
-      <div className="overflow-x-auto">
+      {!isFormOpen && <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-slate-50 text-slate-500">
             <tr><th>Dokumen</th><th>Kategori</th><th>Proyek</th><th>Tipe</th><th>Ukuran</th><th>Upload</th><th className="pr-4 text-right">Aksi</th></tr>
@@ -238,19 +244,19 @@ export function DocumentManagement() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-2xl" onSubmit={submitUpload}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitUpload}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">Upload Dokumen</h3>
                 <p className="section-description">Gunakan kategori `PHOTO` untuk foto dokumentasi proyek.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeUploadForm} aria-label="Tutup form upload"><X size={16} /></button>
             </div>
-            <div className="mt-4 grid gap-3">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" placeholder="Judul dokumen" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               <input className="input" required placeholder="Kategori, contoh GENERAL / PROJECT / PHOTO" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
               <select className="input" value={form.projectId} onChange={(event) => setForm({ ...form, projectId: event.target.value })}>
@@ -259,12 +265,12 @@ export function DocumentManagement() {
               </select>
               <input className="input" type="file" required onChange={(event) => setForm({ ...form, file: event.target.files?.[0] || null })} />
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeUploadForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Mengupload...' : 'Upload'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {selectedDocument && (

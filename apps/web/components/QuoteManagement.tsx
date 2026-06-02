@@ -172,6 +172,12 @@ export function QuoteManagement() {
     setIsFormOpen(true);
   }
 
+  function closeForm() {
+    setIsFormOpen(false);
+    setEditingQuote(null);
+    setForm(emptyForm);
+  }
+
   function openEditForm(quote: Quote) {
     setEditingQuote(quote);
     setForm({
@@ -245,7 +251,7 @@ export function QuoteManagement() {
         method: editingQuote ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsFormOpen(false);
+      closeForm();
       await loadQuotes();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -272,15 +278,17 @@ export function QuoteManagement() {
     <section id="penawaran" className="card p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="section-title">Penawaran & RAB</h2>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
-          <Plus size={16} /> Penawaran Baru
-        </button>
+        {!isFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateForm} disabled={!token}>
+            <Plus size={16} /> Penawaran Baru
+          </button>
+        )}
       </div>
 
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data penawaran dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 grid gap-3">
+      {!isFormOpen && <div className="mt-4 grid gap-3">
         {loading && <div className="empty-state">Memuat penawaran...</div>}
         {!loading && quotes.length === 0 && <div className="empty-state">Belum ada penawaran.</div>}
         {quotes.map((quote) => (
@@ -303,20 +311,20 @@ export function QuoteManagement() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {isFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-4xl" onSubmit={submitForm}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitForm}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingQuote ? 'Edit Penawaran' : 'Tambah Penawaran'}</h3>
                 <p className="section-description">Subtotal dihitung otomatis dari item pekerjaan.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeForm} aria-label="Tutup form penawaran"><X size={16} /></button>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" required placeholder="Nomor penawaran" value={form.number} onChange={(event) => setForm({ ...form, number: event.target.value })} />
               <input className="input" required placeholder="Judul penawaran" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
@@ -333,14 +341,14 @@ export function QuoteManagement() {
               </select>
             </div>
 
-            <div className="mt-5">
+            <div>
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-slate-950">Item Pekerjaan</p>
                 <button type="button" className="btn-secondary" onClick={addItem}>+ Item</button>
               </div>
               <div className="mt-3 grid gap-3">
                 {form.items.map((item, index) => (
-                  <div key={index} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 md:grid-cols-[1fr_90px_100px_140px_120px_auto]">
+                  <div key={index} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 lg:grid-cols-[minmax(220px,1fr)_90px_100px_160px_140px_auto]">
                     <input className="input" required placeholder="Deskripsi pekerjaan" value={item.description} onChange={(event) => updateItem(index, { description: event.target.value })} />
                     <input className="input" required placeholder="Satuan" value={item.unit} onChange={(event) => updateItem(index, { unit: event.target.value })} />
                     <NumberInput className="input" required value={item.qty} onChange={(val) => updateItem(index, { qty: Number(val || 0) })} allowDecimal />
@@ -352,25 +360,25 @@ export function QuoteManagement() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <RupiahInput className="input" placeholder="Pajak" value={form.tax} onChange={(val) => setForm({ ...form, tax: val })} />
               <RupiahInput className="input" placeholder="Diskon" value={form.discount} onChange={(val) => setForm({ ...form, discount: val })} />
-              <textarea className="input md:col-span-2" rows={3} placeholder="Catatan" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={4} placeholder="Catatan" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
             </div>
 
-            <div className="mt-5 grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
+            <div className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
               <div className="flex justify-between"><span>Pajak</span><strong>{formatCurrency(form.tax)}</strong></div>
               <div className="flex justify-between"><span>Diskon</span><strong>{formatCurrency(form.discount)}</strong></div>
               <div className="flex justify-between border-t pt-2 text-base text-navy"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
             </div>
 
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Penawaran'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {selectedQuote && (

@@ -68,7 +68,7 @@ const emptyCompanyForm: CompanyForm = {
   notes: ''
 };
 
-const cardSurface = 'rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/60 backdrop-blur-sm';
+const cardSurface = 'w-full rounded-3xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur';
 
 function getCompanyIcon(company: Company) {
   const text = `${company.name} ${company.type}`.toLowerCase();
@@ -140,7 +140,7 @@ function SettingsSection({
   children: ReactNode;
 }) {
   return (
-    <section className={`${cardSurface} overflow-hidden`}>
+    <section className={cardSurface}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-gradient-to-r from-white/95 to-slate-50 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#071426] text-cyan-200 shadow-sm">
@@ -153,7 +153,7 @@ function SettingsSection({
         </div>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -373,7 +373,7 @@ export default function DashboardSettingsPage() {
 
   return (
     <DashboardShell>
-      <div className="relative min-h-screen overflow-hidden rounded-2xl bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] p-0">
+      <div className="relative w-full max-w-none space-y-6">
         <div className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(14,165,233,.075)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,.06)_1px,transparent_1px)] [background-size:32px_32px]" />
         {toast && (
           <div className="fixed right-4 top-20 z-[60] max-w-sm rounded-2xl border border-emerald-100 bg-white/95 px-4 py-3 text-sm font-bold text-emerald-700 shadow-[0_18px_40px_rgba(2,6,23,0.12)] backdrop-blur-sm">
@@ -381,8 +381,8 @@ export default function DashboardSettingsPage() {
           </div>
         )}
 
-        <div className="blueprint-panel relative mb-5 shadow-premium">
-          <div className="relative overflow-hidden bg-[#071426] p-5 text-white">
+        <div className="blueprint-panel relative shadow-premium">
+          <div className="relative bg-[#071426] p-5 text-white">
             <div className="absolute inset-0 opacity-15 [background-image:linear-gradient(rgba(14,165,233,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,.18)_1px,transparent_1px)] [background-size:28px_28px]" />
             <div className="absolute inset-x-0 bottom-0 h-1 bg-[#F5A623]" />
             <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-end">
@@ -421,7 +421,7 @@ export default function DashboardSettingsPage() {
           </div>
         </div>
 
-        <section className={`${cardSurface} relative mb-6 overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(2,6,23,0.09)]`}>
+        <section className={`${cardSurface} relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(2,6,23,0.09)]`}>
           <div className={`absolute inset-x-0 top-0 h-1 ${activeVisual.bar}`} />
           <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[#F5A623]/10 blur-2xl" />
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -482,7 +482,7 @@ export default function DashboardSettingsPage() {
                     return (
                       <div
                         key={company.id}
-                        className={`relative overflow-hidden rounded-2xl border bg-white/90 p-4 shadow-[0_10px_30px_rgba(2,6,23,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_42px_rgba(2,6,23,0.09)] ${isActive ? `${visual.active} ring-2 ${visual.ring}` : 'border-slate-200/80 hover:border-[#F5A623]/70'}`}
+                        className={`relative rounded-2xl border bg-white/90 p-4 shadow-[0_10px_30px_rgba(2,6,23,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_42px_rgba(2,6,23,0.09)] ${isActive ? `${visual.active} ring-2 ${visual.ring}` : 'border-slate-200/80 hover:border-[#F5A623]/70'}`}
                       >
                         <div className={`absolute inset-x-0 top-0 h-1 ${visual.bar}`} />
                         <div className="flex items-start justify-between gap-3">
@@ -628,9 +628,9 @@ export default function DashboardSettingsPage() {
         </div>
 
         {isCompanyFormOpen && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4 backdrop-blur-sm">
-            <form className="settings-modal-enter w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" onSubmit={submitCompanyForm}>
-              <div className="relative overflow-hidden border-b border-slate-200 bg-[#06142E] px-5 py-5 text-white">
+          <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+            <form className="settings-modal-enter w-full space-y-6" onSubmit={submitCompanyForm}>
+              <div className="relative border-b border-slate-200 bg-[#06142E] px-5 py-5 text-white">
                 <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(245,166,35,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(245,166,35,.18)_1px,transparent_1px)] [background-size:26px_26px]" />
                 <div className="relative flex items-start justify-between gap-4">
                   <div>
@@ -643,10 +643,10 @@ export default function DashboardSettingsPage() {
                 </div>
               </div>
 
-              <div className="max-h-[75vh] overflow-y-auto bg-[#F4F7FB] p-5">
+              <div>
                 {companyError && <div className="mb-4 rounded-2xl border border-rose-100 bg-white p-3 text-sm font-bold text-rose-700">{companyError}</div>}
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <label className="block">
                     <span className="mb-1.5 block text-xs font-bold uppercase text-slate-500">Nama Perusahaan</span>
                     <input className="input rounded-2xl" required value={companyForm.name} onChange={(event) => setCompanyForm({ ...companyForm, name: event.target.value })} />
@@ -663,7 +663,7 @@ export default function DashboardSettingsPage() {
                     <span className="mb-1.5 block text-xs font-bold uppercase text-slate-500">Telepon</span>
                     <input className="input rounded-2xl" value={companyForm.phone} onChange={(event) => setCompanyForm({ ...companyForm, phone: event.target.value })} />
                   </label>
-                  <label className="block md:col-span-2">
+                  <label className="block lg:col-span-2">
                     <span className="mb-1.5 block text-xs font-bold uppercase text-slate-500">Alamat</span>
                     <input className="input rounded-2xl" value={companyForm.address} onChange={(event) => setCompanyForm({ ...companyForm, address: event.target.value })} />
                   </label>
@@ -675,9 +675,9 @@ export default function DashboardSettingsPage() {
                     <span className="mb-1.5 block text-xs font-bold uppercase text-slate-500">Website</span>
                     <input className="input rounded-2xl" value={companyForm.website} onChange={(event) => setCompanyForm({ ...companyForm, website: event.target.value })} />
                   </label>
-                  <label className="block md:col-span-2">
+                  <label className="block lg:col-span-2">
                     <span className="mb-1.5 block text-xs font-bold uppercase text-slate-500">Catatan</span>
-                    <textarea className="input min-h-28 rounded-2xl" value={companyForm.notes} onChange={(event) => setCompanyForm({ ...companyForm, notes: event.target.value })} />
+                    <textarea className="input h-auto min-h-[120px] rounded-2xl" value={companyForm.notes} onChange={(event) => setCompanyForm({ ...companyForm, notes: event.target.value })} />
                   </label>
                 </div>
               </div>
@@ -691,7 +691,7 @@ export default function DashboardSettingsPage() {
                 </button>
               </div>
             </form>
-          </div>
+          </section>
         )}
       </div>
       <style jsx global>{`

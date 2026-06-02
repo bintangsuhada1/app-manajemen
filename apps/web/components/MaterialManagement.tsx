@@ -150,6 +150,17 @@ export function MaterialManagement() {
     setIsMaterialFormOpen(true);
   }
 
+  function closeMaterialForm() {
+    setIsMaterialFormOpen(false);
+    setEditingMaterial(null);
+    setMaterialForm(emptyMaterialForm);
+  }
+
+  function closeMovementForm() {
+    setIsMovementFormOpen(false);
+    setMovementForm(emptyMovementForm);
+  }
+
   function openEditMaterial(material: Material) {
     setEditingMaterial(material);
     setMaterialForm({
@@ -186,7 +197,7 @@ export function MaterialManagement() {
         method: editingMaterial ? 'PUT' : 'POST',
         body: JSON.stringify(payload)
       });
-      setIsMaterialFormOpen(false);
+      closeMaterialForm();
       await loadMaterials();
       await loadOptions();
       notifyCompanyDataChanged(activeCompanyId);
@@ -209,7 +220,7 @@ export function MaterialManagement() {
     };
     try {
       await request('/materials/movement', { method: 'POST', body: JSON.stringify(payload) });
-      setIsMovementFormOpen(false);
+      closeMovementForm();
       await loadMaterials();
       notifyCompanyDataChanged(activeCompanyId);
     } catch (err) {
@@ -239,26 +250,33 @@ export function MaterialManagement() {
           <h2 className="section-title">Material</h2>
           <p className="section-description">Stok dan mutasi inventaris.</p>
         </div>
-        <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateMaterial} disabled={!token}>
-          <Plus size={16} /> Material Baru
-        </button>
+        {!isMaterialFormOpen && !isMovementFormOpen && (
+          <button className="btn-primary inline-flex items-center gap-2" onClick={openCreateMaterial} disabled={!token}>
+            <Plus size={16} /> Material Baru
+          </button>
+        )}
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
-        <input className="input" placeholder="Cari nama atau SKU" value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} />
+      {!isMaterialFormOpen && !isMovementFormOpen && <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 md:grid-cols-[minmax(220px,1fr)_minmax(150px,180px)_auto]">
+        <input className="input min-w-0" placeholder="Cari nama material" value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} />
         <select className="input" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value })}>
           <option value="">Semua kategori</option>
           {options.categories.map((category) => <option key={category}>{category}</option>)}
         </select>
-        <button className="btn-dark" onClick={() => void loadMaterials()} disabled={!token}>Cari</button>
-      </div>
+        <button className="btn-dark w-full md:w-auto" onClick={() => void loadMaterials()} disabled={!token}>Cari</button>
+      </div>}
 
       {!token && <p className="mt-4 text-sm text-orange-700">Login dulu agar data material dapat dimuat.</p>}
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-4 grid gap-3">
+      {!isMaterialFormOpen && !isMovementFormOpen && <div className="mt-4 grid gap-3">
         {loading && <div className="empty-state">Memuat material...</div>}
-        {!loading && materials.length === 0 && <div className="empty-state">Belum ada material.</div>}
+        {!loading && materials.length === 0 && (
+          <div className="empty-state">
+            <p className="font-semibold text-slate-950">Belum ada material</p>
+            <p className="mt-1 text-xs text-slate-500">Data stok dan mutasi material akan muncul setelah material pertama dibuat.</p>
+          </div>
+        )}
         {materials.map((material) => {
           const lowStock = Number(material.stock) <= Number(material.minStock);
           return (
@@ -286,59 +304,59 @@ export function MaterialManagement() {
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {isMaterialFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-2xl" onSubmit={submitMaterial}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitMaterial}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{editingMaterial ? 'Edit Material' : 'Tambah Material'}</h3>
                 <p className="section-description">Stok awal diisi saat material dibuat.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsMaterialFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeMaterialForm} aria-label="Tutup form material"><X size={16} /></button>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <input className="input" placeholder="SKU" value={materialForm.sku} onChange={(event) => setMaterialForm({ ...materialForm, sku: event.target.value })} />
               <input className="input" required placeholder="Nama material" value={materialForm.name} onChange={(event) => setMaterialForm({ ...materialForm, name: event.target.value })} />
               <input className="input" placeholder="Kategori" value={materialForm.category} onChange={(event) => setMaterialForm({ ...materialForm, category: event.target.value })} />
               <input className="input" required placeholder="Satuan" value={materialForm.unit} onChange={(event) => setMaterialForm({ ...materialForm, unit: event.target.value })} />
               <NumberInput className="input" placeholder="Stok awal" value={materialForm.stock} onChange={(val) => setMaterialForm({ ...materialForm, stock: val })} allowDecimal />
               <NumberInput className="input" placeholder="Minimum stok" value={materialForm.minStock} onChange={(val) => setMaterialForm({ ...materialForm, minStock: val })} allowDecimal />
-              <RupiahInput className="input md:col-span-2" placeholder="Harga rata-rata" value={materialForm.averagePrice} onChange={(val) => setMaterialForm({ ...materialForm, averagePrice: val })} />
+              <RupiahInput className="input lg:col-span-2" placeholder="Harga rata-rata" value={materialForm.averagePrice} onChange={(val) => setMaterialForm({ ...materialForm, averagePrice: val })} />
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsMaterialFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeMaterialForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Material'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {isMovementFormOpen && (
-        <div className="modal-backdrop">
-          <form className="modal-card max-w-xl" onSubmit={submitMovement}>
-            <div className="flex items-start justify-between gap-4">
+        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <form className="w-full space-y-6" onSubmit={submitMovement}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h3 className="section-title">{movementForm.type === 'IN' ? 'Barang Masuk' : 'Barang Keluar'}</h3>
                 <p className="section-description">Mutasi otomatis memperbarui stok.</p>
               </div>
-              <button type="button" className="icon-button" onClick={() => setIsMovementFormOpen(false)}><X size={16} /></button>
+              <button type="button" className="icon-button" onClick={closeMovementForm} aria-label="Tutup form mutasi"><X size={16} /></button>
             </div>
-            <div className="mt-4 grid gap-3">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <select className="input" value={movementForm.projectId} onChange={(event) => setMovementForm({ ...movementForm, projectId: event.target.value })}>
                 <option value="">Tanpa proyek</option>
                 {options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>
               <NumberInput className="input" required placeholder="Jumlah" value={movementForm.qty} onChange={(val) => setMovementForm({ ...movementForm, qty: val })} allowDecimal />
-              <textarea className="input" rows={3} placeholder="Catatan" value={movementForm.note} onChange={(event) => setMovementForm({ ...movementForm, note: event.target.value })} />
+              <textarea className="input h-auto min-h-[140px] lg:col-span-2" rows={4} placeholder="Catatan" value={movementForm.note} onChange={(event) => setMovementForm({ ...movementForm, note: event.target.value })} />
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <button type="button" className="btn-secondary" onClick={() => setIsMovementFormOpen(false)}>Batal</button>
+            <div className="flex flex-wrap justify-end gap-3 pt-4">
+              <button type="button" className="btn-secondary" onClick={closeMovementForm}>Batal</button>
               <button className="btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Mutasi'}</button>
             </div>
           </form>
-        </div>
+        </section>
       )}
     </section>
   );
