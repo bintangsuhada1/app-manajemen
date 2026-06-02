@@ -34,36 +34,48 @@ type DashboardData = {
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 type DashboardTone = 'navy' | 'gold' | 'emerald' | 'rose' | 'sky' | 'slate';
 
-const dashboardToneStyles: Record<DashboardTone, { icon: string; accent: string; glow: string }> = {
+const dashboardToneStyles: Record<DashboardTone, { icon: string; accent: string; glow: string; aura: string; dot: string }> = {
   navy: {
     icon: 'bg-gradient-to-br from-[#102343] to-navy text-white ring-white/50',
     accent: 'bg-gradient-to-r from-cyan-400 to-navy',
-    glow: 'shadow-navy/10'
+    glow: 'shadow-navy/10',
+    aura: 'rgba(56,189,248,0.16)',
+    dot: 'bg-cyan-400'
   },
   gold: {
     icon: 'bg-gradient-to-br from-amber-200 to-gold text-navy ring-amber-100',
     accent: 'bg-gradient-to-r from-amber-300 to-gold',
-    glow: 'shadow-orange-200/70'
+    glow: 'shadow-orange-200/70',
+    aura: 'rgba(245,166,35,0.18)',
+    dot: 'bg-amber-400'
   },
   emerald: {
     icon: 'bg-gradient-to-br from-emerald-50 to-cyan-50 text-emerald-700 ring-emerald-100',
     accent: 'bg-gradient-to-r from-emerald-400 to-cyan-400',
-    glow: 'shadow-emerald-100'
+    glow: 'shadow-emerald-100',
+    aura: 'rgba(16,185,129,0.16)',
+    dot: 'bg-emerald-400'
   },
   rose: {
     icon: 'bg-gradient-to-br from-rose-50 to-orange-50 text-rose-700 ring-rose-100',
     accent: 'bg-gradient-to-r from-rose-400 to-orange-400',
-    glow: 'shadow-rose-100'
+    glow: 'shadow-rose-100',
+    aura: 'rgba(239,68,68,0.16)',
+    dot: 'bg-rose-400'
   },
   sky: {
     icon: 'bg-gradient-to-br from-sky-50 to-cyan-50 text-sky-700 ring-sky-100',
     accent: 'bg-gradient-to-r from-sky-400 to-cyan-400',
-    glow: 'shadow-sky-100'
+    glow: 'shadow-sky-100',
+    aura: 'rgba(14,165,233,0.18)',
+    dot: 'bg-sky-400'
   },
   slate: {
     icon: 'bg-gradient-to-br from-white to-slate-100 text-slate-700 ring-slate-200',
     accent: 'bg-gradient-to-r from-slate-300 to-slate-500',
-    glow: 'shadow-slate-100'
+    glow: 'shadow-slate-100',
+    aura: 'rgba(148,163,184,0.14)',
+    dot: 'bg-slate-400'
   }
 };
 
@@ -153,17 +165,17 @@ function DashboardStatCard({
   const styles = dashboardToneStyles[tone];
 
   return (
-    <div className={`group relative rounded-[1.25rem] border border-white/65 bg-white/[0.74] shadow-[0_16px_44px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.86)] backdrop-blur-xl ${styles.glow} transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200/80 hover:bg-white/[0.86] hover:shadow-[0_22px_54px_rgba(15,23,42,0.10)]`}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.10),transparent_12rem)] opacity-80" />
-      <div className={`absolute inset-x-0 top-0 h-0.5 ${styles.accent}`} />
-      <div className="relative p-4">
+    <div className={`group relative rounded-[28px] border border-white/65 bg-white/[0.70] shadow-[0_20px_64px_rgba(2,6,23,0.12),inset_0_1px_0_rgba(255,255,255,0.86)] backdrop-blur-2xl ${styles.glow} transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-200/80 hover:bg-white/[0.84] hover:shadow-[0_28px_78px_rgba(2,6,23,0.16),0_0_30px_rgba(56,189,248,0.16)]`}>
+      <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(135deg,rgba(255,255,255,0.62),transparent_36%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_13rem)] opacity-90" />
+      <div className={`absolute inset-x-6 top-0 h-px ${styles.accent}`} />
+      <div className="relative p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500">{title}</p>
-            <h3 className={`${emphasis ? 'text-xl 2xl:text-2xl' : 'text-xl'} money-value mt-1.5 break-words font-semibold text-slate-950`}>{value}</h3>
-            <p className="mt-1.5 text-xs font-medium text-slate-500">{note}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">{title}</p>
+            <h3 className={`${emphasis ? 'text-2xl 2xl:text-[28px]' : 'text-[24px]'} money-value mt-2 break-words font-semibold leading-tight text-slate-950`}>{value}</h3>
+            <p className="mt-2 inline-flex items-center gap-2 text-[11px] font-semibold text-slate-500"><span className={`h-1.5 w-1.5 rounded-full ${styles.dot} shadow-[0_0_12px_currentColor]`} />{note}</p>
           </div>
-          <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl shadow-sm ring-1 ${styles.icon}`}>
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl shadow-[0_12px_30px_rgba(2,6,23,0.14)] ring-1 transition-transform duration-200 group-hover:-rotate-3 ${styles.icon}`}>
             <Icon size={18} />
           </div>
         </div>
@@ -186,8 +198,9 @@ function DashboardSectionCard({
   action?: ReactNode;
 }) {
   return (
-    <section className="min-w-0 rounded-[1.25rem] border border-white/65 bg-white/[0.74] shadow-[0_18px_48px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-xl">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/60 bg-gradient-to-r from-white/78 to-slate-50/55 px-4 py-3.5 backdrop-blur-md">
+    <section className="relative min-w-0 rounded-[28px] border border-white/65 bg-white/[0.68] shadow-[0_24px_74px_rgba(2,6,23,0.13),inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-2xl">
+      <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.13),transparent_18rem),linear-gradient(135deg,rgba(255,255,255,0.5),transparent_38%)]" />
+      <div className="relative flex flex-wrap items-start justify-between gap-3 border-b border-white/60 bg-gradient-to-r from-white/68 to-slate-50/45 px-4 py-3.5 backdrop-blur-md">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#102343] to-navy text-cyan-200 shadow-[0_10px_24px_rgba(7,20,38,0.16)]">
             <Icon size={18} />
@@ -199,7 +212,7 @@ function DashboardSectionCard({
         </div>
         {action && <div className="min-w-0">{action}</div>}
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </section>
   );
 }
@@ -390,10 +403,11 @@ export function DashboardAnalytics() {
             </div>
           )}
         >
-          <div className="h-52 min-w-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.08),transparent_18rem)] p-4 sm:h-56">
+          <div className="relative h-64 min-w-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.12),transparent_18rem),linear-gradient(180deg,rgba(15,23,42,0.02),rgba(255,255,255,0.28))] p-5 sm:h-72">
+            <div className="pointer-events-none absolute inset-x-6 top-6 h-24 rounded-full bg-cyan-300/10 blur-3xl" />
             {chartHasData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chart} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                <BarChart data={chart} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="dashboardIncome" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.95} />
@@ -404,17 +418,17 @@ export function DashboardAnalytics() {
                       <stop offset="100%" stopColor="#EF4444" stopOpacity={0.86} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="2 6" vertical={false} stroke="rgba(148,163,184,0.28)" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} tickFormatter={(value) => `${Number(value) / 1000000} jt`} />
+                  <CartesianGrid strokeDasharray="2 8" vertical={false} stroke="rgba(148,163,184,0.20)" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 11, fontWeight: 600 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 11, fontWeight: 600 }} tickFormatter={(value) => `${Number(value) / 1000000} jt`} />
                   <Tooltip
                     cursor={{ fill: 'rgba(14,165,233,0.08)' }}
                     formatter={(value: unknown, name: string) => [formatCurrency(Number(value)), name]}
-                    contentStyle={{ borderRadius: 16, border: '1px solid rgba(226,232,240,0.88)', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(14px)', boxShadow: '0 18px 44px rgba(15, 23, 42, 0.12)', fontSize: 12 }}
+                    contentStyle={{ borderRadius: 18, border: '1px solid rgba(255,255,255,0.82)', background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(18px)', boxShadow: '0 22px 54px rgba(2, 6, 23, 0.18)', fontSize: 12 }}
                     labelStyle={{ color: '#0F172A', fontWeight: 600 }}
                   />
-                  <Bar dataKey="in" name="Kas Masuk" fill="url(#dashboardIncome)" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="out" name="Kas Keluar" fill="url(#dashboardExpense)" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="in" name="Kas Masuk" fill="url(#dashboardIncome)" radius={[10, 10, 3, 3]} isAnimationActive animationDuration={900} />
+                  <Bar dataKey="out" name="Kas Keluar" fill="url(#dashboardExpense)" radius={[10, 10, 3, 3]} isAnimationActive animationDuration={900} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -431,7 +445,7 @@ export function DashboardAnalytics() {
             const daysLeft = getDaysLeft(deadline.endDate);
             const visual = getDeadlineVisual(daysLeft);
             return (
-              <div key={deadline.id} className={`rounded-2xl border p-3.5 text-[13px] shadow-[0_10px_24px_rgba(15,23,42,0.05),inset_0_1px_0_rgba(255,255,255,0.68)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 ${visual.card}`}>
+              <div key={deadline.id} className={`rounded-2xl border p-3.5 text-[13px] shadow-[0_12px_30px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.68)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 ${visual.card} ${daysLeft !== null && daysLeft < 0 ? 'animate-pulse-subtle shadow-[0_18px_44px_rgba(239,68,68,0.18)]' : ''}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-bold text-navy">{deadline.code ? `${deadline.code} - ` : ''}{deadline.name}</p>
@@ -442,7 +456,7 @@ export function DashboardAnalytics() {
                   </span>
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                  <div className={`h-full rounded-full ${visual.bar}`} style={{ width: visual.width }} />
+                  <div className={`h-full rounded-full ${visual.bar} shadow-[0_0_16px_currentColor]`} style={{ width: visual.width }} />
                 </div>
               </div>
             );
