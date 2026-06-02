@@ -68,7 +68,7 @@ const emptyCompanyForm: CompanyForm = {
   notes: ''
 };
 
-const cardSurface = 'w-full rounded-3xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur';
+const cardSurface = 'glass-surface';
 
 function getCompanyIcon(company: Company) {
   const text = `${company.name} ${company.type}`.toLowerCase();
@@ -628,7 +628,7 @@ export default function DashboardSettingsPage() {
         </div>
 
         {isCompanyFormOpen && (
-          <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+          <section className="glass-surface p-6">
             <form className="settings-modal-enter w-full space-y-6" onSubmit={submitCompanyForm}>
               <div className="relative border-b border-slate-200 bg-[#06142E] px-5 py-5 text-white">
                 <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(245,166,35,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(245,166,35,.18)_1px,transparent_1px)] [background-size:26px_26px]" />

@@ -307,7 +307,7 @@ export function MaterialManagement() {
       </div>}
 
       {isMaterialFormOpen && (
-        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <section className="glass-surface mt-4 p-6">
           <form className="w-full space-y-6" onSubmit={submitMaterial}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -334,7 +334,7 @@ export function MaterialManagement() {
       )}
 
       {isMovementFormOpen && (
-        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <section className="glass-surface mt-4 p-6">
           <form className="w-full space-y-6" onSubmit={submitMovement}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>

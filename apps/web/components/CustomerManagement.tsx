@@ -200,7 +200,7 @@ export function CustomerManagement() {
       {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       {isFormOpen && (
-        <section className="mt-4 w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <section className="glass-surface mt-4 p-6">
           <form className="w-full space-y-6" onSubmit={submitForm}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>

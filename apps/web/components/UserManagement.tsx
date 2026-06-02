@@ -313,7 +313,7 @@ export function UserManagement() {
       </div>}
 
       {isFormOpen && (
-        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <section className="glass-surface p-6">
           <form className="w-full space-y-6" onSubmit={submitForm}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -406,7 +406,7 @@ export function UserManagement() {
       )}
 
       {isPasswordOpen && editingUser && (
-        <section className="w-full rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
+        <section className="glass-surface p-6">
           <form className="w-full space-y-6" onSubmit={submitPasswordReset}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
