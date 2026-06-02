@@ -6,3 +6,7 @@ apps/api/.env
 uploads/
 dist/
 build/
+
+# TypeScript build cache
+*.tsbuildinfo
+apps/web/tsconfig.tsbuildinfo

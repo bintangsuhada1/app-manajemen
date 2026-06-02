@@ -362,31 +362,52 @@ input[type="file"].input {
 }
 
 /* Subtle micro-animations */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
 @keyframes ambient-drift {
-  from {
-    transform: translate3d(-10px, -8px, 0);
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: 0.38;
   }
-  to {
-    transform: translate3d(12px, 10px, 0);
+
+  50% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.03);
+    opacity: 0.52;
+  }
+
+  100% {
+    transform: translate3d(2%, -1.5%, 0) scale(1.01);
+    opacity: 0.44;
   }
 }
 
 @keyframes surface-enter {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(8px);
+    filter: blur(4px);
   }
-  to {
+
+  100% {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow:
+      0 12px 30px rgba(15,23,42,0.07),
+      inset 0 1px 0 rgba(255,255,255,0.68);
+  }
+
+  50% {
+    box-shadow:
+      0 18px 48px rgba(239,68,68,0.22),
+      0 0 24px rgba(239,68,68,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.72);
   }
 }
 
 .animate-pulse-subtle {
-  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-subtle 2.4s ease-in-out infinite;
 }

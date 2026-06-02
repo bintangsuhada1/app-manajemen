@@ -215,44 +215,45 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <main className="relative min-h-screen min-w-0 overflow-x-hidden lg:pl-60">
         <div className="sticky top-0 z-40 px-4 py-3 lg:px-6">
           <div className="rounded-[24px] border border-white/45 bg-white/[0.72] px-4 py-3 shadow-[0_18px_60px_rgba(2,6,23,0.16)] backdrop-blur-2xl">
-          <div className="flex w-full max-w-none items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <button className="icon-button lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Buka navigasi">
-                <Menu size={18} />
-              </button>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500">
-                  <span>PT Jurti</span>
-                  <span className="text-slate-300">/</span>
-                  <span className="text-cyan-700">{currentLabel}</span>
+            <div className="flex w-full max-w-none items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <button className="icon-button lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Buka navigasi">
+                  <Menu size={18} />
+                </button>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-slate-500">
+                    <span>PT Jurti</span>
+                    <span className="text-slate-300">/</span>
+                    <span className="text-cyan-700">{currentLabel}</span>
+                  </div>
+                  <div className="mt-1 flex min-w-0 items-center gap-2">
+                    <h1 className="truncate text-[19px] font-semibold text-slate-950 sm:text-[20px]">{activeCompany.name}</h1>
+                  </div>
+                  <p className="truncate text-[12px] font-medium text-slate-500">{activeCompany.type || 'Operational Intelligence Dashboard'}</p>
                 </div>
-                <div className="mt-1 flex min-w-0 items-center gap-2">
-                  <h1 className="truncate text-[19px] font-semibold text-slate-950 sm:text-[20px]">{activeCompany.name}</h1>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <div className="hidden min-w-[240px] items-center gap-2 rounded-2xl border border-white/70 bg-white/[0.58] px-3 py-2 text-[12px] font-medium text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] backdrop-blur-md xl:flex">
+                  <Search size={14} className="text-cyan-600" />
+                  <span className="truncate">Cari proyek, invoice, dokumen...</span>
                 </div>
-                <p className="truncate text-[12px] font-medium text-slate-500">{activeCompany.type || 'Operational Intelligence Dashboard'}</p>
+                <div className="hidden items-center gap-2 rounded-2xl border border-emerald-200/70 bg-emerald-50/75 px-3 py-2 text-[12px] font-semibold text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-md md:flex">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.85)]" />
+                  Online
+                </div>
+                <button className="icon-button hidden sm:inline-grid" title="Notifikasi operasional" aria-label="Notifikasi operasional">
+                  <Bell size={15} />
+                </button>
+                <div className="flex items-center gap-2.5 rounded-2xl border border-white/70 bg-white/[0.76] px-2.5 py-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-md">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#102343] to-navy text-xs font-semibold text-white shadow-sm">{initials || 'U'}</div>
+                  <div className="hidden min-w-0 sm:block">
+                    <p className="max-w-36 truncate text-[13px] font-semibold text-slate-950">{user.name}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.03em] text-slate-500">{user.role.replaceAll('_', ' ')}</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="hidden min-w-[240px] items-center gap-2 rounded-2xl border border-white/70 bg-white/[0.58] px-3 py-2 text-[12px] font-medium text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] backdrop-blur-md xl:flex">
-                <Search size={14} className="text-cyan-600" />
-                <span className="truncate">Cari proyek, invoice, dokumen...</span>
-              </div>
-              <div className="hidden items-center gap-2 rounded-2xl border border-emerald-200/70 bg-emerald-50/75 px-3 py-2 text-[12px] font-semibold text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-md md:flex">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.85)]" />
-                Online
-              </div>
-              <button className="icon-button hidden sm:inline-grid" title="Notifikasi operasional" aria-label="Notifikasi operasional">
-                <Bell size={15} />
-              </button>
-              <div className="flex items-center gap-2.5 rounded-2xl border border-white/70 bg-white/[0.76] px-2.5 py-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-md">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#102343] to-navy text-xs font-semibold text-white shadow-sm">{initials || 'U'}</div>
-                <div className="hidden min-w-0 sm:block">
-                  <p className="max-w-36 truncate text-[13px] font-semibold text-slate-950">{user.name}</p>
-                  <p className="text-[11px] font-medium uppercase tracking-[0.03em] text-slate-500">{user.role.replaceAll('_', ' ')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
           </div>
         </div>
 
